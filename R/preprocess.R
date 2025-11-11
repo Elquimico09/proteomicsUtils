@@ -40,6 +40,40 @@ filterMissingValues <- function(df, threshold = 0.7) {
   return(df_merged)
 }
 
+#' Filter High Abundance Proteins
+#' @title Filter High Abundance
+#' @description
+#' Removes common high abundance proteins (albumin, immunoglobulins, etc.) from the dataset.
+#' @param df A dataframe containing an 'Accession' column
+#' @return A filtered dataframe with high abundance proteins removed
+#' @export
+#' @examples
+#' # df <- data.frame(Accession=c("P02768", "Q12345"), value=c(100, 50))
+#' # filtered <- filterHighAbundance(df)
+filterHighAbundance <- function(df){
+  high_abundant_accession <- c("P02768", "P0DOX5", "P02671",
+                               "P02675", "P02679", "P02647",
+                               "P02763", "P02787", "P01024",
+                               "P01009", "P02766", "P01023")
+  df_filtered <- df %>% dplyr::filter(!Accession %in% high_abundant_accession)
+  return(df_filtered)
+}
+
+#' Filter Keratin Proteins
+#' @title Filter Keratin
+#' @description
+#' Removes keratin proteins (common contaminants) from the dataset.
+#' @param df A dataframe containing a 'Description' column
+#' @return A filtered dataframe with keratin proteins removed
+#' @export
+#' @examples
+#' # df <- data.frame(Description=c("Keratin type I", "Actin"), value=c(100, 50))
+#' # filtered <- filterKeratin(df)
+filterKeratin <- function(df){
+  df_filtered <- df %>% dplyr::filter(!str_detect(Description, "Keratin"))
+  return(df_filtered)
+}
+
 #' Extract Gene Name and Protein Name from Description column
 #' @title Extract Gene Name and Protein Name
 #' @description

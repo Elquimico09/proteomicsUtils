@@ -482,56 +482,6 @@ makeClustermap <- function(df, scale = TRUE, show_rownames = FALSE, rownames = N
   return(hm)
 }
 
-# Function: filterHighAbundance
-# Given a dataframe with an Accession column, filters out the high abundance proteins
-#
-# Args:
-# @param df: dataframe containing the data
-#
-# Returns:
-# @return: dataframe with the high abundance proteins filtered out
-#' Filter High Abundance Proteins
-#' @title Filter High Abundance
-#' @description
-#' Removes common high abundance proteins (albumin, immunoglobulins, etc.) from the dataset.
-#' @param df A dataframe containing an 'Accession' column
-#' @return A filtered dataframe with high abundance proteins removed
-#' @export
-#' @examples
-#' # df <- data.frame(Accession=c("P02768", "Q12345"), value=c(100, 50))
-#' # filtered <- filterHighAbundance(df)
-filterHighAbundance <- function(df){
-  high_abundant_accession <- c("P02768", "P0DOX5", "P02671",
-                               "P02675", "P02679", "P02647",
-                               "P02763", "P02787", "P01024",
-                               "P01009", "P02766", "P01023")
-  df_filtered <- df %>% dplyr::filter(!Accession %in% high_abundant_accession)
-  return(df_filtered)
-}
-
-# Function: filterKeratin
-# Given a dataframe with a Description column, filters out the keratin proteins
-#
-# Args:
-# @param df: dataframe containing the data
-#
-# Returns:
-# @return: dataframe with the keratin proteins filtered out
-#' Filter Keratin Proteins
-#' @title Filter Keratin
-#' @description
-#' Removes keratin proteins (common contaminants) from the dataset.
-#' @param df A dataframe containing a 'Description' column
-#' @return A filtered dataframe with keratin proteins removed
-#' @export
-#' @examples
-#' # df <- data.frame(Description=c("Keratin type I", "Actin"), value=c(100, 50))
-#' # filtered <- filterKeratin(df)
-filterKeratin <- function(df){
-  df_filtered <- df %>% dplyr::filter(!str_detect(Description, "Keratin"))
-  return(df_filtered)
-}
-
 # Function: makeVolcano
 # Takes a dataframe with 2 columns labelled nlog10p and log2fc. It creates a new column
 # in the dataframe labelled status containing information for that row (upregulated,
