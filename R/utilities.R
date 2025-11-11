@@ -60,37 +60,6 @@ scale_matrix_rows <- function(x,
   return(x)
 }
 
-
-## Modify to take a dataframe as an input and return a dataframe with a gene column
-############# Extract Gene Name ################
-#
-# Function: Extract Gene Name
-# Given a list of descriptions for proteins from PD, returns a new list
-# containing containing the gene names
-#
-# Args:
-#   - string: Description
-#
-# Returns:
-#   - gene_name: name of gene
-#' Extract Gene Name from Protein Description
-#' @title Extract Gene Name
-#' @description
-#' Given a protein description from Proteome Discoverer, extracts the gene name
-#' from the GN= field.
-#' @param description A character string containing the protein description
-#' @return A character string containing the gene name
-#' @export
-#' @examples
-#' # desc <- "Protein OS=Homo sapiens GN=ACTB PE=1 SV=1"
-#' # gene <- extractGeneName(desc)
-extractGeneName <- function(description) {
-  split1 <- strsplit(description, "GN=")[[1]][2]
-  geneName <- strsplit(split1, " ")[[1]][1]
-  return(geneName)
-}
-
-
 # Function: performGO
 # Takes a dataframe with a gene column and performs gene ontology on the
 # specified ontology
@@ -278,36 +247,6 @@ performMWTest <- function(df1, df2) {
     )
   
   return(c_df)
-}
-
-# Function: importData
-# Given a filepath, imports the data using appropriate functions and returns
-# a dataframe
-#
-# Args:
-# @param filepath: character, the path to the file
-#
-# Returns:
-# @return: dataframe containing the data
-#' Import Data from File
-#' @title Import Data
-#' @description
-#' Imports data from various file formats (.csv, .xlsx, .xls).
-#' @param filepath Path to the file to import
-#' @return A dataframe containing the imported data
-#' @export
-#' @examples
-#' # data <- importData("data.csv")
-importData <- function(filepath) {
-  if (grepl(".csv", filepath)) {
-    data <- readr::read_csv(filepath)
-  } else if (grepl(".xlsx", filepath)) {
-    data <- readxl::read_excel(filepath)
-  } else if (grepl(".xls", filepath)) {
-    data <- readxl::read_excel(filepath)
-  } else {
-    stop("File type not supported")
-  }
 }
 
 # Function: categorizeData
@@ -591,79 +530,6 @@ filterHighAbundance <- function(df){
 filterKeratin <- function(df){
   df_filtered <- df %>% dplyr::filter(!str_detect(Description, "Keratin"))
   return(df_filtered)
-}
-
-# Function: normalizeData
-# Given a dataframe, normalizes the data using log2 then quantile normalization
-#
-# Args:
-# @param df: dataframe containing the data
-#
-# Returns:
-# @return: dataframe containing the normalized data
-#' Normalize Proteomics Data
-#' @title Normalize Data
-#' @description
-#' Normalizes data using various methods: log2, quantile, or combined approaches.
-#' @param df A dataframe containing the data to normalize
-#' @param method Normalization method: "log2quantile", "log2", "quantile", or "relative"
-#' @return A normalized dataframe
-#' @export
-#' @examples
-#' # df <- data.frame(Gene=c("A", "B"), s1=c(100, 200), s2=c(150, 250))
-#' # normalized <- normalizeData(df, method="log2quantile")
-normalizeData <- function(df, method = "log2quantile") {
-  # require(preprocessCore) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
-  colnames <- colnames(df)
-  df_chr <- df %>% select(where(is.character))
-  df_num <- df %>% select(where(is.numeric))
-  if (method == "log2quantile") {
-    df_quantile <- as.data.frame(normalize.quantiles(as.matrix(df_num)))
-    df_log <- log2(df_quantile)
-    result <- cbind(df_chr, df_log)
-  } else if (method == "log2") {
-    df_log <- log2(df_num + 1)
-    result <- cbind(df_chr, df_log)
-  } else if (method == "quantile") {
-    df_quantile <- as.data.frame(normalize.quantiles(as.matrix(df_num)))
-    result <- cbind(df_chr, df_quantile)
-  } else if (method == "relative") {
-    df_relative <- apply(df_num, 2, function(x) x / sum(x, na.rm = TRUE) * 100)
-    result <- cbind(df_chr, df_relative)
-  } else {
-    stop("Method not supported")
-  }
-  colnames(result) <- colnames
-  return(result)
-}
-
-# Function: filterMissingValues
-# Given a dataframe, filters out rows with more than 30% missing values on default
-#
-# Args:
-# @param df: dataframe containing the data
-# @param threshold: numeric, the threshold for missing values
-#
-# Returns:
-# @return: dataframe with rows containing more than 30% missing values filtered out
-#' Filter Rows with Missing Values
-#' @title Filter Missing Values
-#' @description
-#' Removes rows with more than a specified threshold of missing values.
-#' @param df A dataframe containing the data
-#' @param threshold The minimum fraction of non-missing values required (default 0.7)
-#' @return A filtered dataframe
-#' @export
-#' @examples
-#' # df <- data.frame(Gene=c("A", "B"), s1=c(1, NA), s2=c(NA, NA), s3=c(2, 3))
-#' # filtered <- filterMissingValues(df, threshold=0.5)
-filterMissingValues <- function(df, threshold = 0.7) {
-  df_numeric <- df %>% select(where(is.numeric))
-  df_character <- df %>% select(where(is.character))
-  df_numeric <- df_numeric %>% mutate(coverage = rowSums(!is.na(.)) / ncol(df_numeric))
-  df_merged <- cbind(df_character, df_numeric) %>% filter(coverage > threshold) %>% 
-    select(-coverage)
-  return(df_merged)
 }
 
 # Function: makeVolcano

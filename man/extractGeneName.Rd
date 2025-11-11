@@ -7,19 +7,19 @@
 extractGeneName(description)
 }
 \arguments{
-\item{description}{A character string containing the protein description}
+\item{df}{A dataframe containing a 'Description' column}
 }
 \value{
-A character string containing the gene name
+A dataframe with added 'Gene' and 'Protein' columns
 }
 \description{
-Given a protein description from Proteome Discoverer, extracts the gene name
-from the GN= field.
+Given a dataframe from Proteome Discoverer with a 'Description' column, extracts the gene name
+from the GN= field and the protein name.
 }
 \details{
-Extract Gene Name from Protein Description
+Extract Gene Name and Protein Name from Protein Description
 }
 \examples{
-# desc <- "Protein OS=Homo sapiens GN=ACTB PE=1 SV=1"
-# gene <- extractGeneName(desc)
+# df <- data.frame(Description = "Protein OS=Homo sapiens GN=ACTB PE=1 SV=1")
+# df <- extractGeneName(df)
 }
