@@ -1,8 +1,8 @@
 Package: proteomicsUtils
 Type: Package
 Title: Proteomics Data Analysis Utilities
-Version: 0.1.0
-Authors@R: person("Vishal", email = "your.email@example.com", role = c("aut", "cre"))
+Version: 1.0.1
+Authors@R: person("Vishal", email = "vishal.sandilya@ttu.edu", role = c("aut", "cre"))
 Description: A collection of utility functions for proteomics data analysis,
     including data import, normalization, filtering, statistical testing,
     visualization (volcano plots, heatmaps, PCA), gene ontology analysis,
