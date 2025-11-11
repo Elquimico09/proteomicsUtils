@@ -1,0 +1,33 @@
+Package: proteomicsUtils
+Type: Package
+Title: Proteomics Data Analysis Utilities
+Version: 0.1.0
+Authors@R: person("Vishal", email = "your.email@example.com", role = c("aut", "cre"))
+Description: A collection of utility functions for proteomics data analysis,
+    including data import, normalization, filtering, statistical testing,
+    visualization (volcano plots, heatmaps, PCA), gene ontology analysis,
+    and machine learning utilities.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.0.0
+Imports:
+    ggplot2,
+    dplyr,
+    tidyr,
+    readr,
+    readxl,
+    stringr,
+    ggprism,
+    ggrepel,
+    ggpubr,
+    clusterProfiler,
+    matrixStats,
+    ComplexHeatmap,
+    circlize,
+    preprocessCore,
+    pROC,
+    e1071,
+    truncnorm
+Suggests:
+    testthat
