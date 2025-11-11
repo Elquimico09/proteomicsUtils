@@ -25,7 +25,7 @@ Once this package is on GitHub, you can install it directly:
 install.packages("remotes")
 
 # Install from GitHub (replace 'yourusername' with your GitHub username)
-remotes::install_github("yourusername/proteomicsUtils")
+remotes::install_github("https://github.com/Elquimico09/proteomicsUtils")
 ```
 
 Or using devtools:
