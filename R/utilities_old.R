@@ -1,20 +1,23 @@
-### volcano plot function
-
-# Function: makeVolcano
-# Takes a dataframe containing 2 columns labelled
-# nlog10p, log2fc. It creates a new column in the dataframe labelled status
-# containing information for that row (upregulated, downregulated, or outside
-# statistical parameters). Then it creates and plots a volcano plot.
-#
-# Args:
-#   - df = dataframe containing two columns. columns 1 must be nlog10p and
-#          column 2 must be log2fc.
-#   - interesting_featues = A vector containing the interesting features
-#   - p_cutoff = the cutoff p-value for significance. must be in log scale
-#   - fc_cutoff = the cutoff fold change, must be in log scale. The default
-#                 value is 1.
-# Returns:
-#   - ggplot2 object containing the volcano plot
+#' Create Volcano Plot (Deprecated)
+#' @title Deprecated Volcano Plot
+#' @description
+#' Generates a volcano plot using legacy styling. Prefer `makeVolcano()` for new analyses.
+#' @param df Dataframe containing at least `log2fc` and `nlog10p` columns.
+#' @param interest_proteins Character vector of proteins to highlight.
+#' @param p_cutoff Numeric p-value cutoff on the `nlog10p` scale.
+#' @param fc_cutoff Numeric log2 fold-change cutoff (default 1).
+#' @param title Plot title.
+#' @return A `ggplot2` object representing the volcano plot.
+#' @export
+#' @examples
+#' \dontrun{
+#'   df <- data.frame(
+#'     Gene = paste0("P", 1:10),
+#'     log2fc = rnorm(10),
+#'     nlog10p = runif(10, 0, 5)
+#'   )
+#'   makeVolcano_deprecated(df, interest_proteins = df$Gene[1:2], p_cutoff = 1.3)
+#' }
 makeVolcano_deprecated <- function(df, interest_proteins = c(), p_cutoff, fc_cutoff = 1,
                         title = "") {
 
@@ -861,6 +864,19 @@ makeBarplot <- function(df, pvalue_df, cohort_labels, gene) {
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#'   df_long <- data.frame(
+#'     Treatment = rep(c("A", "B", "C"), each = 3),
+#'     Abundance = rnorm(9)
+#'   )
+#'   tukey_df <- data.frame(
+#'     Gene = "Gene1",
+#'     tukey_pvalue12 = 0.03,
+#'     tukey_pvalue13 = 0.2,
+#'     tukey_pvalue23 = 0.04
+#'   )
+#'   makeBarplot3(df_long, tukey_df, c("A", "B", "C"), "Gene1")
+#' }
 makeBarplot3 <- function(df, pvalue_df, cohort_labels, gene) {
   require(ggplot2)
   require(ggprism)

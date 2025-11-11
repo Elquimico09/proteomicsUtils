@@ -995,6 +995,19 @@ makeBarplot <- function(df, pvalue_df, cohort_labels, gene) {
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#'   df_long <- data.frame(
+#'     Treatment = rep(c("A", "B", "C"), each = 3),
+#'     Abundance = rnorm(9)
+#'   )
+#'   tukey_df <- data.frame(
+#'     Gene = "Gene1",
+#'     tukey_pvalue12 = 0.03,
+#'     tukey_pvalue13 = 0.2,
+#'     tukey_pvalue23 = 0.04
+#'   )
+#'   makeBarplot3(df_long, tukey_df, c("A", "B", "C"), "Gene1")
+#' }
 makeBarplot3 <- function(df, pvalue_df, cohort_labels, gene) {
   # require(ggplot2) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
   # require(ggprism) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
@@ -1882,6 +1895,7 @@ impute_minprob <- function(data_matrix, shift = 1.8, scale = 0.3, warn_rows_with
 #'   the first column will be `FeatureID`. Subsequent columns correspond to the
 #'   requested comparisons, with pairs of columns for log2 fold change (`_log2FC`)
 #'   and adjusted p-value (`_p.adj`). Rows where analysis failed will have NA.
+#' @export
 #'
 #' @examples
 #' # --- Create Sample Data (simulate user's dataframes on log2 scale) ---
