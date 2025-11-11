@@ -35,7 +35,7 @@ Or using devtools:
 install.packages("devtools")
 
 # Install from GitHub
-devtools::install_github("yourusername/proteomicsUtils")
+devtools::install_github("https://github.com/Elquimico09/proteomicsUtils")
 ```
 
 The package will automatically install most dependencies. However, you may need to manually install Bioconductor packages first:
