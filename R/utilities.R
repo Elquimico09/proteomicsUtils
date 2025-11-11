@@ -144,13 +144,14 @@ performGO <- function(data) {
 #' fold changes and adjusted p-values.
 #' @param df1 Dataframe containing the first cohort
 #' @param df2 Dataframe containing the second cohort
+#' @param scale scale for fold change (default "log2")
 #' @return A dataframe with the original data plus pvalue, padj, foldchange, nlog10p, and log2fc columns
 #' @export
 #' @examples
 #' # df1 <- data.frame(s1=rnorm(10), s2=rnorm(10), s3=rnorm(10))
 #' # df2 <- data.frame(s4=rnorm(10), s5=rnorm(10), s6=rnorm(10))
 #' # results <- performTTest(df1, df2)
-performTTest <- function(df1, df2) {
+performTTest <- function(df1, df2, scale = "log2") {
   # Ensure dataframes have the same number of rows
   if (nrow(df1) != nrow(df2)) {
     stop("df1 and df2 must have the same number of rows")
@@ -177,7 +178,14 @@ performTTest <- function(df1, df2) {
       )
       
       pvalues[i] <- test_result$p.value
-      foldchange[i] <- mean(values_df2, na.rm = TRUE) - mean(values_df1, na.rm = TRUE)
+      # Compute fold change
+      mean_df1 <- mean(values_df1, na.rm = TRUE)
+      mean_df2 <- mean(values_df2, na.rm = TRUE)
+      if (scale == "log2") {
+        foldchange[i] <- 2^(mean_df2 - mean_df1)
+      } else {
+        foldchange[i] <- mean_df2 / mean_df1
+      }
     } else {
       pvalues[i] <- 1
       foldchange[i] <- 0
@@ -187,7 +195,7 @@ performTTest <- function(df1, df2) {
   # Adjust p-values and compute logs
   padj <- p.adjust(pvalues, method = "BH")
   nlog10p <- -log10(pvalues)
-  log2fc <- foldchange
+  log2fc <- log2(foldchange)
   
   # Combine results with original data
   c_df <- cbind(df1, df2)
@@ -482,19 +490,7 @@ makeClustermap <- function(df, scale = TRUE, show_rownames = FALSE, rownames = N
   return(hm)
 }
 
-# Function: makeVolcano
-# Takes a dataframe with 2 columns labelled nlog10p and log2fc. It creates a new column
-# in the dataframe labelled status containing information for that row (upregulated,
-# downregulated, or outside statistical parameters). Then it creates and plots a volcano plot.
-#
-# Args:
-# @param df: dataframe containing at least two columns. columns 1 must be nlog10p and
-#            column 2 must be log2fc.
-# @param fc_cutoff: numeric, the cutoff fold change, default is 0
-# @param p_cutoff: numeric, the cutoff p-value for significance, default is 0.05
 
-# Returns:
-# @return: ggplot2 object containing the volcano plot
 #' Create Volcano Plot
 #' @title Make Volcano Plot
 #' @description
@@ -516,6 +512,8 @@ makeVolcano <- function(df, fc_cutoff = 0, p_cutoff = 0.05) {
   if (!("nlog10p" %in% names(df))) {
     stop("Must have a column named nlog10p")
   }
+
+
   df <- df %>% 
     mutate(
       pvalue = ifelse(is.na(pvalue), 1, pvalue),

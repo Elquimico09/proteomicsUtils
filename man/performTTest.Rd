@@ -10,6 +10,8 @@ performTTest(df1, df2)
 \item{df1}{Dataframe containing the first cohort}
 
 \item{df2}{Dataframe containing the second cohort}
+
+\item{scale}{scale for fold change (default "log2")}
 }
 \value{
 A dataframe with the original data plus pvalue, padj, foldchange, nlog10p, and log2fc columns
@@ -24,5 +26,5 @@ Perform T-Test on Two Dataframes
 \examples{
 # df1 <- data.frame(s1=rnorm(10), s2=rnorm(10), s3=rnorm(10))
 # df2 <- data.frame(s4=rnorm(10), s5=rnorm(10), s6=rnorm(10))
-# results <- performTTest(df1, df2)
+# results <- performTTest(df1, df2, scale = "log2")
 }
