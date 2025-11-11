@@ -1,88 +1,22 @@
-### volcano plot function
-
-# Function: makeVolcano
-# Takes a dataframe containing 2 columns labelled
-# nlog10p, log2fc. It creates a new column in the dataframe labelled status
-# containing information for that row (upregulated, downregulated, or outside
-# statistical parameters). Then it creates and plots a volcano plot.
-#
-# Args:
-#   - df = dataframe containing two columns. columns 1 must be nlog10p and
-#          column 2 must be log2fc.
-#   - interesting_featues = A vector containing the interesting features
-#   - p_cutoff = the cutoff p-value for significance. must be in log scale
-#   - fc_cutoff = the cutoff fold change, must be in log scale. The default
-#                 value is 1.
-# Returns:
-#   - ggplot2 object containing the volcano plot
-makeVolcano_deprecated <- function(df, interest_proteins = c(), p_cutoff, fc_cutoff = 1,
-                        title = "") {
-
-  # Error Checking
-  if (!("log2fc" %in% names(df))) {
-    stop("Must have a columns named log2fc")
-  }
-  if (!("nlog10p" %in% names(df))) {
-    stop("Must have a column named nlog10p")
-  }
-
-  # Stratify the features based on nlog10p and log2fc
-  df <- df %>% 
-    mutate(status = case_when(
-      (nlog10p > p_cutoff) & (abs(log2fc) >= fc_cutoff) & (Gene %in% interest_proteins) ~ "Interesting",
-      (nlog10p > p_cutoff) & (log2fc >= fc_cutoff) ~ "Upregulated",
-      (nlog10p > p_cutoff) & (log2fc <= -fc_cutoff) ~ "Downregulated",
-      TRUE ~ "Outside Statistical Parameters"
-    ))
-  # Calculate total upregulated and downregulated features for labelling later
-  upreg_count = as.integer(sum(df$status == "Upregulated"))
-  downreg_count = as.integer(sum(df$status == "Downregulated"))
-
-  # Create the scatterplot
-  volcanoPlot <- ggplot() +
-    geom_point(data = df %>% filter(status != "Interesting"),
-               aes(x = log2fc, y = nlog10p, fill = factor(status)),
-               alpha = 0.6, shape = 21, color = "black", size = 2) +
-    geom_point(data = df %>% filter(status == "Interesting"),
-               aes(x = log2fc, y = nlog10p, fill = factor(status)),
-               alpha = 1, shape = 21, color = "black", size = 2.5) +
-    ggprism::theme_prism() +
-    theme(legend.position = "bottom",
-          legend.title = element_blank(),
-          legend.text = element_text(size = 14, face = "bold"),
-          axis.title.y = element_text(size = 18, face = "bold"),
-          axis.text = element_text(size = 14, face = "bold"),
-          axis.title.x = element_text(size = 18, face = "bold"),
-          axis.minor.ticks.length = rel(0.5),
-          plot.title = element_text(size = 20, face = "bold")) +
-    scale_fill_manual(values = c("Upregulated" = "red4",
-                                 "Downregulated" = "green4",
-                                 "Outside Statistical Parameters" = "darkgrey",
-                                 "Interesting" = "orange")) +
-    labs(title = title, fill = "status") +
-    geom_hline(yintercept = p_cutoff, linetype = "dashed", color = "black",
-               size = 0.75) +
-    scale_y_continuous(breaks = round(seq(min(df$nlog10p, na.rm = TRUE),
-                                          max(df$nlog10p, na.rm = TRUE), by = 2), digits = 2),
-                       minor_breaks = seq(min(df$nlog10p, na.rm = TRUE),
-                                          max(df$nlog10p, na.rm = TRUE), by = 1)) +
-    guides(x = guide_axis(minor.ticks = TRUE),
-           y = guide_axis(minor.ticks = TRUE),
-           color = guide_legend(nrow = 2, ncol = 2, byrow = TRUE),
-           fill = guide_legend(nrow = 2, ncol = 2)) +
-    labs(y = expression(-log[10]*p), x = expression(log[2]*foldchange)) +
-    geom_text_repel(data = df %>% filter(status == "Interesting"),
-                    aes(x = log2fc, y = nlog10p, label = Gene), 
-                    fontface = "bold", size = 4.5,
-                    box.padding = 0.5, point.padding = 0.7,
-                    segment.color = 'black', segment.size = 1)
-  return(volcanoPlot)
-}
-
-
 ### Scale Rows Function 
 
-scale_matrix_rows = function(x,
+#' Scale Matrix Rows
+#' @title Scale Matrix Rows
+#' @description
+#' Scales rows of a matrix by centering and/or scaling. Similar to base::scale()
+#' but operates on rows instead of columns.
+#' @param x A numeric matrix
+#' @param center Logical indicating whether to center the rows (default TRUE)
+#' @param scale Logical indicating whether to scale the rows (default TRUE)
+#' @param add_attr Logical indicating whether to add attributes for center and scale (default TRUE)
+#' @param rows Optional vector of row indices to subset
+#' @param cols Optional vector of column indices to subset
+#' @return A matrix with scaled rows
+#' @export
+#' @examples
+#' # mat <- matrix(rnorm(100), nrow=10)
+#' # scaled_mat <- scale_matrix_rows(mat)
+scale_matrix_rows <- function(x,
                              center = TRUE,
                              scale = TRUE,
                              add_attr = TRUE,
@@ -98,22 +32,22 @@ scale_matrix_rows = function(x,
   }
   
   # Get the row means
-  cm = rowMeans(x, na.rm = TRUE)
+  cm <- rowMeans(x, na.rm = TRUE)
   
   # Get the row sd
   if (scale) {
-    csd = matrixStats::rowSds(x, center = cm, na.rm = TRUE)
+    csd <- matrixStats::rowSds(x, center = cm, na.rm = TRUE)
   } else {
     # just divide by 1 if not
-    csd = rep(1, length = length(cm))
+    csd <- rep(1, length = length(cm))
   }
   
   if (!center) {
     # just subtract 0
-    cm = rep(0, length = length(cm))
+    cm <- rep(0, length = length(cm))
   }
   
-  x = (x - cm) / csd
+  x <- (x - cm) / csd
   if (add_attr) {
     if (center) {
       attr(x, "scaled:center") <- cm
@@ -139,6 +73,17 @@ scale_matrix_rows = function(x,
 #
 # Returns:
 #   - gene_name: name of gene
+#' Extract Gene Name from Protein Description
+#' @title Extract Gene Name
+#' @description
+#' Given a protein description from Proteome Discoverer, extracts the gene name
+#' from the GN= field.
+#' @param description A character string containing the protein description
+#' @return A character string containing the gene name
+#' @export
+#' @examples
+#' # desc <- "Protein OS=Homo sapiens GN=ACTB PE=1 SV=1"
+#' # gene <- extractGeneName(desc)
 extractGeneName <- function(description) {
   split1 <- strsplit(description, "GN=")[[1]][2]
   geneName <- strsplit(split1, " ")[[1]][1]
@@ -156,6 +101,19 @@ extractGeneName <- function(description) {
 #                "MF" for molecular function
 # Returns:
 #   - dataframe containing GO results
+#' Perform Gene Ontology Analysis
+#' @title Gene Ontology Analysis
+#' @description
+#' Performs gene ontology enrichment analysis on a set of genes using clusterProfiler.
+#' @param df A dataframe containing a 'Gene' column with gene symbols
+#' @param ontology The ontology to use: "BP" (Biological Process), "CC" (Cellular Component), or "MF" (Molecular Function)
+#' @param database The organism database to use (default: org.Rn.eg.db for rat)
+#' @param keytype The type of gene identifier (default: "SYMBOL")
+#' @return A dataframe containing GO enrichment results
+#' @export
+#' @examples
+#' # df <- data.frame(Gene = c("ACTB", "GAPDH", "TP53"))
+#' # go_results <- geneOntology(df, ontology = "BP")
 geneOntology <- function(df, ontology = "BP", database = org.Rn.eg.db, keytype = "SYMBOL") {
   genes <- df$Gene
   go_analysis <- as.data.frame(clusterProfiler::enrichGO(gene = genes, OrgDb = database,
@@ -172,6 +130,18 @@ geneOntology <- function(df, ontology = "BP", database = org.Rn.eg.db, keytype =
 #
 # Returns:
 #   - goresult: list containing dataframes with the go_results
+#' Perform Gene Ontology on Multiple Dataframes
+#' @title Perform GO Analysis on List
+#' @description
+#' Takes a list of dataframes and performs gene ontology analysis on each,
+#' across all three ontologies (BP, MF, CC).
+#' @param data A list of dataframes, each containing a 'Gene' column
+#' @return A list of lists containing GO results for each dataframe and ontology
+#' @export
+#' @examples
+#' # df1 <- data.frame(Gene = c("ACTB", "GAPDH"))
+#' # df2 <- data.frame(Gene = c("TP53", "MYC"))
+#' # results <- performGO(list(df1, df2))
 performGO <- function(data) {
   ontologies <- c("BP", "MF", "CC")
   goresult <- list() # Empty list to store the final results
@@ -198,6 +168,19 @@ performGO <- function(data) {
 #
 # Returns: 
 # @return: dataframe containing the results of the t-test
+#' Perform T-Test on Two Dataframes
+#' @title Row-wise T-Test
+#' @description
+#' Performs a t-test on each row between two dataframes and calculates
+#' fold changes and adjusted p-values.
+#' @param df1 Dataframe containing the first cohort
+#' @param df2 Dataframe containing the second cohort
+#' @return A dataframe with the original data plus pvalue, padj, foldchange, nlog10p, and log2fc columns
+#' @export
+#' @examples
+#' # df1 <- data.frame(s1=rnorm(10), s2=rnorm(10), s3=rnorm(10))
+#' # df2 <- data.frame(s4=rnorm(10), s5=rnorm(10), s6=rnorm(10))
+#' # results <- performTTest(df1, df2)
 performTTest <- function(df1, df2) {
   # Ensure dataframes have the same number of rows
   if (nrow(df1) != nrow(df2)) {
@@ -256,6 +239,18 @@ performTTest <- function(df1, df2) {
 #
 # Returns:
 # @return: dataframe containing the results of the Mann-Whitney test
+#' Perform Mann-Whitney Test on Two Dataframes
+#' @title Row-wise Mann-Whitney Test
+#' @description
+#' Performs a Mann-Whitney U test on each row between two dataframes.
+#' @param df1 Dataframe containing the first cohort
+#' @param df2 Dataframe containing the second cohort
+#' @return A dataframe with the original data plus pvalue, padj, foldchange, and nlog10p columns
+#' @export
+#' @examples
+#' # df1 <- data.frame(s1=rnorm(10), s2=rnorm(10), s3=rnorm(10))
+#' # df2 <- data.frame(s4=rnorm(10), s5=rnorm(10), s6=rnorm(10))
+#' # results <- performMWTest(df1, df2)
 performMWTest <- function(df1, df2) {
   pvalues <- numeric(nrow(df1))
   foldchange <- numeric(nrow(df1))
@@ -294,6 +289,15 @@ performMWTest <- function(df1, df2) {
 #
 # Returns:
 # @return: dataframe containing the data
+#' Import Data from File
+#' @title Import Data
+#' @description
+#' Imports data from various file formats (.csv, .xlsx, .xls).
+#' @param filepath Path to the file to import
+#' @return A dataframe containing the imported data
+#' @export
+#' @examples
+#' # data <- importData("data.csv")
 importData <- function(filepath) {
   if (grepl(".csv", filepath)) {
     data <- readr::read_csv(filepath)
@@ -318,6 +322,17 @@ importData <- function(filepath) {
 #
 # Returns:
 # @return: list of dataframes containing the categorized data
+#' Categorize Data by Cohorts
+#' @title Categorize Data
+#' @description
+#' Splits a dataframe into multiple dataframes based on cohort identifiers in column names.
+#' @param df A dataframe with samples in columns
+#' @param cohorts A character vector of cohort identifiers
+#' @return A list of dataframes: first element contains character columns, subsequent elements contain numeric columns for each cohort
+#' @export
+#' @examples
+#' # df <- data.frame(Gene=c("A", "B"), Control_1=c(1,2), Control_2=c(3,4), Treated_1=c(5,6))
+#' # categorized <- categorizeData(df, c("Control", "Treated"))
 categorizeData <- function(df, cohorts) {
   data_list <- list()
   df_char <- df %>% select(where(is.character))
@@ -339,6 +354,17 @@ categorizeData <- function(df, cohorts) {
 #
 # Returns:
 # @return: list of dataframes containing the results of the test
+#' Compare Cohorts with Statistical Tests
+#' @title Compare Cohorts
+#' @description
+#' Performs pairwise statistical comparisons between all cohorts in a list.
+#' @param data_list A list of dataframes containing categorized data
+#' @param test The statistical test to use: "mwtest" (Mann-Whitney) or "ttest" (t-test)
+#' @return A list of dataframes containing comparison results
+#' @export
+#' @examples
+#' # data_list <- list(df_char, df_cohort1, df_cohort2)
+#' # results <- compareCohorts(data_list, test = "mwtest")
 compareCohorts <- function(data_list, test = "mwtest") {
   results <- list()
   
@@ -371,6 +397,19 @@ compareCohorts <- function(data_list, test = "mwtest") {
 # 
 # Returns:
 # @return: list containing the PCA results
+#' Perform Principal Component Analysis
+#' @title Perform PCA
+#' @description
+#' Performs PCA on a dataframe and returns results with variance explained.
+#' @param df A dataframe containing numeric values
+#' @param sample A vector of sample names
+#' @param scale Logical indicating whether to scale the data (default TRUE)
+#' @param center Logical indicating whether to center the data (default TRUE)
+#' @return A list containing: PCA results dataframe, x-axis label, y-axis label
+#' @export
+#' @examples
+#' # df <- data.frame(s1=rnorm(10), s2=rnorm(10), s3=rnorm(10))
+#' # pca_results <- performPCA(df, sample=c("A", "B", "C"))
 performPCA <- function(df, sample, scale = TRUE, center = TRUE) {
   pca_results <- list()
   df <- df %>% select(where(is.numeric))
@@ -397,6 +436,17 @@ performPCA <- function(df, sample, scale = TRUE, center = TRUE) {
 #
 # Returns:
 # @return: ggplot2 object containing the PCA plot
+#' Plot PCA Results
+#' @title Plot PCA
+#' @description
+#' Creates a PCA plot from PCA analysis results.
+#' @param pca_list A list containing PCA results from performPCA()
+#' @param title The title for the plot (default: "Principal Component Analysis")
+#' @return A ggplot2 object containing the PCA plot
+#' @export
+#' @examples
+#' # pca_results <- performPCA(df, sample=c("A", "B", "C"))
+#' # plot <- plotPCA(pca_results)
 plotPCA <- function(pca_list,
                     title = "Principal Component Analysis") {
   pca_df <- pca_list[[1]]
@@ -431,11 +481,27 @@ plotPCA <- function(pca_list,
 #
 # Returns:
 # @return: A ComplexHeatmap object containing the heatmap
+#' Create a Heatmap with Clustering
+#' @title Create Clustermap
+#' @description
+#' Creates a heatmap using ComplexHeatmap with optional row scaling.
+#' @param df A dataframe containing numeric values
+#' @param scale Logical indicating whether to scale the rows (default TRUE)
+#' @param show_rownames Logical indicating whether to show row names (default FALSE)
+#' @param rownames Optional vector of row names to display
+#' @param col Color scale for the heatmap
+#' @param width Width of the heatmap
+#' @param height Height of the heatmap
+#' @return A ComplexHeatmap object
+#' @export
+#' @examples
+#' # df <- data.frame(s1=rnorm(10), s2=rnorm(10), s3=rnorm(10))
+#' # hm <- makeClustermap(df)
 makeClustermap <- function(df, scale = TRUE, show_rownames = FALSE, rownames = NULL,
                            col = circlize::colorRamp2(c(-2, 0, 2), c("green", "black", "red")),
                            width = NULL, height = NULL) {
   df <- df %>% dplyr::select(where(is.numeric))
-  require(ComplexHeatmap)
+  # require(ComplexHeatmap) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
   colnames <- colnames(df)
   if (is.null(rownames)) {
     rownames(df) <- rownames
@@ -485,6 +551,16 @@ makeClustermap <- function(df, scale = TRUE, show_rownames = FALSE, rownames = N
 #
 # Returns:
 # @return: dataframe with the high abundance proteins filtered out
+#' Filter High Abundance Proteins
+#' @title Filter High Abundance
+#' @description
+#' Removes common high abundance proteins (albumin, immunoglobulins, etc.) from the dataset.
+#' @param df A dataframe containing an 'Accession' column
+#' @return A filtered dataframe with high abundance proteins removed
+#' @export
+#' @examples
+#' # df <- data.frame(Accession=c("P02768", "Q12345"), value=c(100, 50))
+#' # filtered <- filterHighAbundance(df)
 filterHighAbundance <- function(df){
   high_abundant_accession <- c("P02768", "P0DOX5", "P02671",
                                "P02675", "P02679", "P02647",
@@ -502,6 +578,16 @@ filterHighAbundance <- function(df){
 #
 # Returns:
 # @return: dataframe with the keratin proteins filtered out
+#' Filter Keratin Proteins
+#' @title Filter Keratin
+#' @description
+#' Removes keratin proteins (common contaminants) from the dataset.
+#' @param df A dataframe containing a 'Description' column
+#' @return A filtered dataframe with keratin proteins removed
+#' @export
+#' @examples
+#' # df <- data.frame(Description=c("Keratin type I", "Actin"), value=c(100, 50))
+#' # filtered <- filterKeratin(df)
 filterKeratin <- function(df){
   df_filtered <- df %>% dplyr::filter(!str_detect(Description, "Keratin"))
   return(df_filtered)
@@ -515,8 +601,19 @@ filterKeratin <- function(df){
 #
 # Returns:
 # @return: dataframe containing the normalized data
+#' Normalize Proteomics Data
+#' @title Normalize Data
+#' @description
+#' Normalizes data using various methods: log2, quantile, or combined approaches.
+#' @param df A dataframe containing the data to normalize
+#' @param method Normalization method: "log2quantile", "log2", "quantile", or "relative"
+#' @return A normalized dataframe
+#' @export
+#' @examples
+#' # df <- data.frame(Gene=c("A", "B"), s1=c(100, 200), s2=c(150, 250))
+#' # normalized <- normalizeData(df, method="log2quantile")
 normalizeData <- function(df, method = "log2quantile") {
-  require(preprocessCore)
+  # require(preprocessCore) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
   colnames <- colnames(df)
   df_chr <- df %>% select(where(is.character))
   df_num <- df %>% select(where(is.numeric))
@@ -549,6 +646,17 @@ normalizeData <- function(df, method = "log2quantile") {
 #
 # Returns:
 # @return: dataframe with rows containing more than 30% missing values filtered out
+#' Filter Rows with Missing Values
+#' @title Filter Missing Values
+#' @description
+#' Removes rows with more than a specified threshold of missing values.
+#' @param df A dataframe containing the data
+#' @param threshold The minimum fraction of non-missing values required (default 0.7)
+#' @return A filtered dataframe
+#' @export
+#' @examples
+#' # df <- data.frame(Gene=c("A", "B"), s1=c(1, NA), s2=c(NA, NA), s3=c(2, 3))
+#' # filtered <- filterMissingValues(df, threshold=0.5)
 filterMissingValues <- function(df, threshold = 0.7) {
   df_numeric <- df %>% select(where(is.numeric))
   df_character <- df %>% select(where(is.character))
@@ -571,9 +679,21 @@ filterMissingValues <- function(df, threshold = 0.7) {
 
 # Returns:
 # @return: ggplot2 object containing the volcano plot
+#' Create Volcano Plot
+#' @title Make Volcano Plot
+#' @description
+#' Creates a volcano plot from differential expression results.
+#' @param df A dataframe containing 'log2fc' and 'nlog10p' columns
+#' @param fc_cutoff Fold change cutoff (default 0)
+#' @param p_cutoff P-value cutoff (default 0.05)
+#' @return A ggplot2 object containing the volcano plot
+#' @export
+#' @examples
+#' # df <- data.frame(log2fc=rnorm(100), nlog10p=runif(100, 0, 5), pvalue=runif(100))
+#' # plot <- makeVolcano(df, fc_cutoff=1, p_cutoff=0.05)
 makeVolcano <- function(df, fc_cutoff = 0, p_cutoff = 0.05) {
-  require(ggplot2)
-  require(ggprism)
+  # require(ggplot2) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
+  # require(ggprism) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
   if (!("log2fc" %in% names(df))) {
     stop("Must have a columns named log2fc")
   }
@@ -652,7 +772,7 @@ makeVolcano <- function(df, fc_cutoff = 0, p_cutoff = 0.05) {
 #' @examples
 #' test <- performANOVA4(df1, df2, df3, df4)
 performANOVA4 <- function(df1, df2, df3, df4) {
-  require(dplyr)
+  # require(dplyr) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
   pvalues <- numeric(nrow(df1))         # Store p-values from ANOVA
   tukey_pvalue12 <- numeric(nrow(df1))  # Store Tukey's p-values for Group1 vs Group2
   tukey_pvalue13 <- numeric(nrow(df1))  # Store Tukey's p-values for Group1 vs Group3
@@ -749,17 +869,17 @@ performANOVA4 <- function(df1, df2, df3, df4) {
     dplyr::mutate(
       anova_pvalue = pvalues,
       tukey_pvalue12 = tukey_pvalue12,   # P-value for Group1 vs Group2
-      tukey_pvalue13 = tukey_pvalue13,   # P-value for Group1 vs Group3
-      tukey_pvalue14 = tukey_pvalue14,   # P-value for Group1 vs Group4
-      tukey_pvalue23 = tukey_pvalue23,   # P-value for Group2 vs Group3
-      tukey_pvalue24 = tukey_pvalue24,   # P-value for Group2 vs Group4
-      tukey_pvalue34 = tukey_pvalue34,   # P-value for Group3 vs Group4
-      foldchange12 = foldchange12,       # Fold change for Group1 vs Group2
-      foldchange13 = foldchange13,       # Fold change for Group1 vs Group3
-      foldchange14 = foldchange14,       # Fold change for Group1 vs Group4
-      foldchange23 = foldchange23,       # Fold change for Group2 vs Group3
-      foldchange24 = foldchange24,       # Fold change for Group2 vs Group4
-      foldchange34 = foldchange34        # Fold change for Group3 vs Group4
+      tukey_pvalue13 <- tukey_pvalue13,   # P-value for Group1 vs Group3
+      tukey_pvalue14 <- tukey_pvalue14,   # P-value for Group1 vs Group4
+      tukey_pvalue23 <- tukey_pvalue23,   # P-value for Group2 vs Group3
+      tukey_pvalue24 <- tukey_pvalue24,   # P-value for Group2 vs Group4
+      tukey_pvalue34 <- tukey_pvalue34,   # P-value for Group3 vs Group4
+      foldchange12 <- foldchange12,       # Fold change for Group1 vs Group2
+      foldchange13 <- foldchange13,       # Fold change for Group1 vs Group3
+      foldchange14 <- foldchange14,       # Fold change for Group1 vs Group4
+      foldchange23 <- foldchange23,       # Fold change for Group2 vs Group3
+      foldchange24 <- foldchange24,       # Fold change for Group2 vs Group4
+      foldchange34 <- foldchange34        # Fold change for Group3 vs Group4
     )
 
   return(c_df)
@@ -776,13 +896,27 @@ performANOVA4 <- function(df1, df2, df3, df4) {
 #
 # Returns:
 # @return: ggplot2 object containing the barplot
+#' Create Barplot with Statistical Annotations
+#' @title Make Barplot
+#' @description
+#' Creates a barplot for a specific gene with Tukey HSD p-values from ANOVA.
+#' @param df A long-format dataframe with 'Treatment' and 'Abundance' columns
+#' @param pvalue_df A wide-format dataframe containing Tukey p-values
+#' @param cohort_labels A vector of cohort labels
+#' @param gene The gene name to plot
+#' @return A ggplot2 object containing the barplot
+#' @export
+#' @examples
+#' # df_long <- data.frame(Treatment=rep(c("A","B","C","D"),each=5), Abundance=rnorm(20))
+#' # pvalue_df <- data.frame(Gene="ACTB", tukey_pvalue12=0.01, tukey_pvalue13=0.05, tukey_pvalue14=0.001)
+#' # plot <- makeBarplot(df_long, pvalue_df, c("A","B","C","D"), "ACTB")
 makeBarplot <- function(df, pvalue_df, cohort_labels, gene) {
-  require(ggplot2)
-  require(ggprism)
-  require(dplyr)
-  require(tidyr)
-  require(ggpubr)
-  require(ggprism)
+  # require(ggplot2) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
+  # require(ggprism) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
+  # require(dplyr) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
+  # require(tidyr) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
+  # require(ggpubr) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
+  # require(ggprism) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
   
   ymax <- (ceiling(max(df$Abundance, na.rm = TRUE)/5) * 5) + 5
   ymin <- (floor(min(df$Abundance, na.rm = TRUE)/5) * 5)
@@ -862,11 +996,11 @@ makeBarplot <- function(df, pvalue_df, cohort_labels, gene) {
 #'
 #' @examples
 makeBarplot3 <- function(df, pvalue_df, cohort_labels, gene) {
-  require(ggplot2)
-  require(ggprism)
-  require(dplyr)
-  require(tidyr)
-  require(ggpubr)
+  # require(ggplot2) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
+  # require(ggprism) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
+  # require(dplyr) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
+  # require(tidyr) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
+  # require(ggpubr) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
   
   ymax <- (ceiling(max(df$Abundance, na.rm = TRUE)/5) * 5) + 5
   ymin <- (floor(min(df$Abundance, na.rm = TRUE)/5) * 5)
@@ -935,9 +1069,22 @@ makeBarplot3 <- function(df, pvalue_df, cohort_labels, gene) {
   
 
   
+#' Create Simple Barplot
+#' @title Make Simple Barplot
+#' @description
+#' Creates a simple barplot without statistical annotations.
+#' @param df A long-format dataframe with 'Treatment' and 'Abundance' columns
+#' @param cohort_labels A vector of cohort labels
+#' @param gene The gene name to plot
+#' @param num Additional space to add to y-axis maximum (default 0)
+#' @return A ggplot2 object containing the barplot
+#' @export
+#' @examples
+#' # df_long <- data.frame(Treatment=rep(c("A","B"),each=5), Abundance=rnorm(10))
+#' # plot <- makeBarplot_simp(df_long, c("A","B"), "ACTB")
 makeBarplot_simp <- function(df, cohort_labels, gene, num = 0) {
-  require(ggplot2)
-  require(ggprism)
+  # require(ggplot2) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
+  # require(ggprism) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
   
   ymax <- (ceiling(max(df$Abundance, na.rm = TRUE)/4) * 4)  + num
   ymin <- floor(min(df$Abundance, na.rm = TRUE))
@@ -969,7 +1116,7 @@ makeBarplot_simp <- function(df, cohort_labels, gene, num = 0) {
 #' @examples
 #' imputeValues(df[1, ])
 imputeValues <- function(row) {
-  require(truncnorm)
+  # require(truncnorm) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
   observed_values <- row[!is.na(row)]
   
   if (length(observed_values) == 0) {
@@ -1245,8 +1392,8 @@ calculateSVM <- function(df, target_vector, ci_level = 0.95) {
 #' @examples
 #' test <- performANOVA6(df1, df2, df3, df4, df5, df6)
 performANOVA6 <- function(df1, df2, df3, df4, df5, df6) {
-  require(dplyr)
-  require(stats)
+  # require(dplyr) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
+  # require(stats) # REMOVED: library calls should be in DESCRIPTION/NAMESPACE
   
   # Number of rows (assuming df1,...,df6 have the same number of rows)
   n_rows <- nrow(df1)
@@ -1444,22 +1591,22 @@ performANOVA6 <- function(df1, df2, df3, df4, df5, df6) {
     dplyr::mutate(
       anova_pvalue   = pvalues,
       tukey_pvalue12 = tukey_pvalue12,  # Group1 vs Group2
-      tukey_pvalue13 = tukey_pvalue13,  # Group1 vs Group3
-      tukey_pvalue14 = tukey_pvalue14,  # Group1 vs Group4
-      tukey_pvalue15 = tukey_pvalue15,  # Group1 vs Group5
-      tukey_pvalue16 = tukey_pvalue16,  # Group1 vs Group6
-      tukey_pvalue23 = tukey_pvalue23,  # Group2 vs Group3
-      tukey_pvalue24 = tukey_pvalue24,  # Group2 vs Group4
-      tukey_pvalue25 = tukey_pvalue25,  # Group2 vs Group5
-      tukey_pvalue26 = tukey_pvalue26,  # Group2 vs Group6
-      tukey_pvalue34 = tukey_pvalue34,  # Group3 vs Group4
-      tukey_pvalue35 = tukey_pvalue35,  # Group3 vs Group5
-      tukey_pvalue36 = tukey_pvalue36,  # Group3 vs Group6
-      tukey_pvalue45 = tukey_pvalue45,  # Group4 vs Group5
-      tukey_pvalue46 = tukey_pvalue46,  # Group4 vs Group6
-      tukey_pvalue56 = tukey_pvalue56,  # Group5 vs Group6
+      tukey_pvalue13 <- tukey_pvalue13,  # Group1 vs Group3
+      tukey_pvalue14 <- tukey_pvalue14,  # Group1 vs Group4
+      tukey_pvalue15 <- tukey_pvalue15,  # Group1 vs Group5
+      tukey_pvalue16 <- tukey_pvalue16,  # Group1 vs Group6
+      tukey_pvalue23 <- tukey_pvalue23,  # Group2 vs Group3
+      tukey_pvalue24 <- tukey_pvalue24,  # Group2 vs Group4
+      tukey_pvalue25 <- tukey_pvalue25,  # Group2 vs Group5
+      tukey_pvalue26 <- tukey_pvalue26,  # Group2 vs Group6
+      tukey_pvalue34 <- tukey_pvalue34,  # Group3 vs Group4
+      tukey_pvalue35 <- tukey_pvalue35,  # Group3 vs Group5
+      tukey_pvalue36 <- tukey_pvalue36,  # Group3 vs Group6
+      tukey_pvalue45 <- tukey_pvalue45,  # Group4 vs Group5
+      tukey_pvalue46 <- tukey_pvalue46,  # Group4 vs Group6
+      tukey_pvalue56 <- tukey_pvalue56,  # Group5 vs Group6
       
-      foldchange12   = foldchange12,
+      foldchange12 <- foldchange12,
       foldchange13   = foldchange13,
       foldchange14   = foldchange14,
       foldchange15   = foldchange15,
@@ -1479,6 +1626,17 @@ performANOVA6 <- function(df1, df2, df3, df4, df5, df6) {
   return(c_df)
 }
 
+#' Create Grouped Boxplot with Significance
+#' @title Create Grouped Boxplot
+#' @description
+#' Creates a boxplot with beeswarm points and statistical significance annotations.
+#' @param data A dataframe with 'group' and 'value' columns
+#' @param alpha Significance threshold (default 0.05)
+#' @return A ggplot2 object containing the boxplot
+#' @export
+#' @examples
+#' # df <- data.frame(group=rep(c("A","B","C"),each=10), value=rnorm(30))
+#' # plot <- create_grouped_boxplot(df, alpha=0.05)
 create_grouped_boxplot <- function(data, alpha = 0.05) {
   # Check required packages
   if (!requireNamespace("ggbeeswarm", quietly = TRUE)) {
