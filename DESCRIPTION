@@ -21,6 +21,9 @@ Imports:
     ggprism,
     ggrepel,
     ggpubr,
+    ggbeeswarm,
+    ggsignif,
+    purrr,
     clusterProfiler,
     matrixStats,
     ComplexHeatmap,
@@ -30,4 +33,6 @@ Imports:
     e1071,
     truncnorm
 Suggests:
-    testthat
+    testthat,
+    org.Rn.eg.db,
+    dunn.test
