@@ -155,5 +155,6 @@ MIT License
 
 ## Author
 
-Vishal Sandilya  
+Vishal Sandilya
+Texas Tech University
 <vishal.sandilya@ttu.edu>
