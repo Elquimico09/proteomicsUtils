@@ -4,7 +4,7 @@
 \alias{perform2WayANOVA}
 \title{Perform 2-Way ANOVA with Automatic Grouping}
 \usage{
-perform2WayANOVA(df, factor1, factor2, comparisons = "all")
+perform2WayANOVA(df, factor1, factor2, comparisons = "all", group_sizes = NULL)
 }
 \arguments{
 \item{df}{A dataframe where each row is a variable and columns represent different samples.}
@@ -17,6 +17,10 @@ perform2WayANOVA(df, factor1, factor2, comparisons = "all")
 for Tukey's post-hoc test. Each comparison should be a vector of 2 group names formed by
 combining factor levels with a space (e.g., "Male control").
 Example: list(c("Male control", "Male disease"), c("Female control", "Female disease"))}
+
+\item{group_sizes}{Optional integer vector of replicate counts per group (in the same
+order as factor1 x factor2). Use this to support uneven replicates when columns are
+ordered by group. If NULL (default), equal replicates per group are assumed.}
 }
 \value{
 A dataframe with ANOVA results, including main effects, interaction, and Tukey post-hoc tests:

@@ -774,6 +774,9 @@ performANOVA <- function(..., comparisons = "all") {
 #'   for Tukey's post-hoc test. Each comparison should be a vector of 2 group names formed by
 #'   combining factor levels with a space (e.g., "Male control").
 #'   Example: list(c("Male control", "Male disease"), c("Female control", "Female disease"))
+#' @param group_sizes Optional integer vector of replicate counts per group (in the same
+#'   order as factor1 x factor2). Use this to support uneven replicates when columns are
+#'   ordered by group. If NULL (default), equal replicates per group are assumed.
 #'
 #' @return A dataframe with ANOVA results, including main effects, interaction, and Tukey post-hoc tests:
 #'   - anova2way_pvalue_overall: minimum p-value across all effects
@@ -792,7 +795,7 @@ performANOVA <- function(..., comparisons = "all") {
 #'                            factor2 = c("control", "disease"),
 #'                            comparisons = list(c("Male control", "Male disease"),
 #'                                             c("Female control", "Female disease")))
-perform2WayANOVA <- function(df, factor1, factor2, comparisons = "all") {
+perform2WayANOVA <- function(df, factor1, factor2, comparisons = "all", group_sizes = NULL) {
   require(dplyr)
   require(stats)
 
@@ -804,15 +807,31 @@ perform2WayANOVA <- function(df, factor1, factor2, comparisons = "all") {
   if (n_groups < 2) stop("Need at least 2 groups for 2-way ANOVA")
 
   # Verify that we have the right number of columns in the dataframe
-  # Assuming each group has multiple replicates, we need to determine how many replicates per group
+  # Assuming columns are ordered by group, allow uneven replicates via group_sizes
   n_cols <- ncol(df)
-  n_replicates <- n_cols / n_groups
+  if (is.null(group_sizes)) {
+    if (n_cols %% n_groups != 0) {
+      stop("Uneven replicates detected. Provide group_sizes to specify counts per group.")
+    }
+    n_replicates <- n_cols / n_groups
+    group_sizes <- rep(n_replicates, n_groups)
+  } else {
+    if (length(group_sizes) != n_groups) {
+      stop("group_sizes length must equal number of groups (length(factor1) * length(factor2))")
+    }
+    if (sum(group_sizes) != n_cols) {
+      stop("Sum of group_sizes must equal ncol(df)")
+    }
+    if (any(group_sizes < 1) || any(group_sizes %% 1 != 0)) {
+      stop("group_sizes must contain positive integers")
+    }
+  }
   n_rows <- nrow(df)
 
   # Create group assignment vector (assumes columns are ordered by group)
-  group_vector <- rep(group_names, each = n_replicates)
-  factor1_vector <- rep(combinations$factor1, each = n_replicates)
-  factor2_vector <- rep(combinations$factor2, each = n_replicates)
+  group_vector <- rep(group_names, times = group_sizes)
+  factor1_vector <- rep(combinations$factor1, times = group_sizes)
+  factor2_vector <- rep(combinations$factor2, times = group_sizes)
 
   # Generate all pairwise combinations for Tukey
   all_pairs <- combn(n_groups, 2)
@@ -858,10 +877,12 @@ perform2WayANOVA <- function(df, factor1, factor2, comparisons = "all") {
       # Extract values for this row
       values <- as.numeric(df[i, ])
 
-      # Check if we have enough non-NA values
-      n_valid <- sum(!is.na(values))
+      # Check if we have enough non-NA values per group
+      valid_counts <- sapply(group_names, function(g) {
+        sum(!is.na(values[group_vector == g]))
+      })
 
-      if (n_valid >= n_groups * 2) {  # At least 2 replicates per group minimum
+      if (all(valid_counts >= 2)) {  # At least 2 replicates per group minimum
         # Create dataframe for ANOVA
         anova_data <- data.frame(
           value = values,
