@@ -18,13 +18,9 @@ This package provides a comprehensive set of functions for proteomics data analy
 
 ### From GitHub (Recommended)
 
-Once this package is on GitHub, you can install it directly:
-
 ```r
 # Install remotes if you don't have it
 install.packages("remotes")
-
-# Install from GitHub (replace 'yourusername' with your GitHub username)
 remotes::install_github("https://github.com/Elquimico09/proteomicsUtils")
 ```
 
@@ -33,8 +29,6 @@ Or using devtools:
 ```r
 # Install devtools if you don't have it
 install.packages("devtools")
-
-# Install from GitHub
 devtools::install_github("https://github.com/Elquimico09/proteomicsUtils")
 ```
 
@@ -73,6 +67,9 @@ data <- importData("proteomics_data.csv")
 filtered <- filterMissingValues(data, threshold = 0.5)
 normalized <- normalizeData(filtered) # log2quantile normalization
 relative_normalized <- normalizeData(filtered, method = "relative")
+
+# visualize distribution
+visualizeDist(filtered)
 
 # Visualization
 volcano_plot <- makeVolcano(results, fc_cutoff = 1)
@@ -118,37 +115,39 @@ pca_plot <- normalized %>%
 
 ## Available Functions
 
-The package includes 29 functions:
+The package includes 31 functions:
 
-1. makeVolcano_deprecated
-2. scale_matrix_rows
-3. extractGeneName
-4. geneOntology
-5. performGO
-6. performTTest
-7. performMWTest
-8. importData
-9. categorizeData
-10. compareCohorts
-11. performPCA
-12. plotPCA
-13. makeClustermap
-14. filterHighAbundance
-15. filterKeratin
-16. normalizeData
-17. filterMissingValues
-18. makeVolcano
-19. performANOVA4
-20. makeBarplot
-21. makeBarplot3
-22. makeBarplot_simp
-23. imputeValues
-24. calculateROC
-25. calculateSVM
-26. performANOVA6
-27. create_grouped_boxplot
-28. impute_minprob
-29. perform_rowwise_anova_tukey_fc
+1. calculateROC
+2. calculateSVM
+3. convertFormat
+4. create_grouped_boxplot
+5. extractGeneName
+6. extractGeneNames
+7. filterHighAbundance
+8. filterKeratin
+9. filterMissingValues
+10. geneOntology
+11. importData
+12. imputeMinProb
+13. makeBarplot
+14. makeBarplot_simp
+15. makeBarplot3
+16. makeClustermap
+17. makeVolcano
+18. normalizeData
+19. perform_rowwise_anova_tukey_fc
+20. perform2WayANOVA
+21. performANOVA
+22. performANOVA6
+23. performGO
+24. performKW
+25. performMWTest
+26. performPCA
+27. performTTest
+28. plotPCA
+29. scale_matrix_rows
+30. testNormality
+31. visualizeDist
 
 ## License
 
