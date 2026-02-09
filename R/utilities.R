@@ -806,11 +806,6 @@ perform2WayANOVA <- function(df, factor1, factor2, comparisons = "all") {
   # Verify that we have the right number of columns in the dataframe
   # Assuming each group has multiple replicates, we need to determine how many replicates per group
   n_cols <- ncol(df)
-  if (n_cols %% n_groups != 0) {
-    stop(paste0("Number of columns (", n_cols, ") is not evenly divisible by number of groups (",
-                n_groups, "). Each group should have the same number of replicates."))
-  }
-
   n_replicates <- n_cols / n_groups
   n_rows <- nrow(df)
 
