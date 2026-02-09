@@ -2,26 +2,43 @@
 % Please edit documentation in R/utilities.R
 \name{performMWTest}
 \alias{performMWTest}
-\title{Row-wise Mann-Whitney Test}
+\title{Perform Mann-Whitney U Test on Two Cohorts}
 \usage{
-performMWTest(df1, df2)
+performMWTest(df1, df2, adjust = FALSE, p_adjust = "BH", log_scale = TRUE)
 }
 \arguments{
-\item{df1}{Dataframe containing the first cohort}
+\item{df1}{Dataframe containing the first cohort. Must have the same number of rows as df2.}
 
-\item{df2}{Dataframe containing the second cohort}
+\item{df2}{Dataframe containing the second cohort. Must have the same number of rows as df1.}
+
+\item{adjust}{Logical, whether to adjust p-values for multiple testing (default: FALSE).}
+
+\item{p_adjust}{Method for p-value adjustment if adjust = TRUE. Options: "BH" (default),
+"bonferroni", "holm", "hochberg", "hommel", "BY", "none".}
+
+\item{log_scale}{Logical, whether data is already log-transformed (default: TRUE).
+If TRUE: log2fc = mean(df2) - mean(df1) (difference of log values).
+If FALSE: foldchange = mean(df2) / mean(df1), log2fc = log2(foldchange).}
 }
 \value{
-A dataframe with the original data plus pvalue, padj, foldchange, and nlog10p columns
+A dataframe containing the combined original data plus computed columns:
+  - pvalue: raw p-value from Mann-Whitney U test
+  - adjusted_pvalue: adjusted p-value (if adjust = TRUE)
+  - log2fc: log2 fold change
+  - foldchange: fold change (if log_scale = FALSE)
 }
 \description{
-Performs a Mann-Whitney U test on each row between two dataframes.
-}
-\details{
-Perform Mann-Whitney Test on Two Dataframes
+Takes two dataframes and performs a non-parametric Mann-Whitney U test on each row.
+This is the non-parametric alternative to the t-test for comparing two groups.
+Computes p-values, fold changes, and log2 fold changes with optional p-value adjustment.
 }
 \examples{
-# df1 <- data.frame(s1=rnorm(10), s2=rnorm(10), s3=rnorm(10))
-# df2 <- data.frame(s4=rnorm(10), s5=rnorm(10), s6=rnorm(10))
-# results <- performMWTest(df1, df2)
+# Basic Mann-Whitney test without adjustment
+result <- performMWTest(control_data, treatment_data)
+
+# Mann-Whitney test with BH adjustment
+result <- performMWTest(control_data, treatment_data, adjust = TRUE)
+
+# Test on non-log data
+result <- performMWTest(control_data, treatment_data, log_scale = FALSE)
 }

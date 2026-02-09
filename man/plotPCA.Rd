@@ -2,25 +2,32 @@
 % Please edit documentation in R/utilities.R
 \name{plotPCA}
 \alias{plotPCA}
-\title{Plot PCA}
+\title{Plot Principal Component Analysis (PCA) Results}
 \usage{
 plotPCA(pca_list, title = "Principal Component Analysis")
 }
 \arguments{
-\item{pca_list}{A list containing PCA results from performPCA()}
+\item{pca_list}{A list containing PCA results from performPCA(). Expected structure:
+- [[1]]: dataframe with PC1, PC2, and Sample columns
+- [[2]]: x-axis label (PC1 with variance explained)
+- [[3]]: y-axis label (PC2 with variance explained)}
 
-\item{title}{The title for the plot (default: "Principal Component Analysis")}
+\item{title}{Character, the title of the plot (default: "Principal Component Analysis").}
 }
 \value{
-A ggplot2 object containing the PCA plot
+A ggplot2 object containing the PCA scatter plot.
 }
 \description{
-Creates a PCA plot from PCA analysis results.
-}
-\details{
-Plot PCA Results
+Creates a 2D scatter plot of PCA results showing PC1 vs PC2. Takes the output from
+performPCA() and generates a publication-ready plot with variance explained in axis labels.
+Points are colored by sample groups and styled with the ggprism theme.
 }
 \examples{
-# pca_results <- performPCA(df, sample=c("A", "B", "C"))
-# plot <- plotPCA(pca_results)
+# Perform PCA and plot
+sample_names <- c("Control_1", "Control_2", "Treatment_1", "Treatment_2")
+pca_results <- performPCA(protein_data, sample = sample_names)
+plotPCA(pca_results)
+
+# Plot with custom title
+plotPCA(pca_results, title = "PCA of Protein Expression")
 }

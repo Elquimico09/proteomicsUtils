@@ -2,29 +2,42 @@
 % Please edit documentation in R/utilities.R
 \name{performTTest}
 \alias{performTTest}
-\title{Row-wise T-Test}
+\title{Perform T-Test on Two Cohorts}
 \usage{
-performTTest(df1, df2)
+performTTest(df1, df2, adjust = FALSE, p_adjust = "BH", log_scale = TRUE)
 }
 \arguments{
-\item{df1}{Dataframe containing the first cohort}
+\item{df1}{Dataframe containing the first cohort. Must have the same number of rows as df2.}
 
-\item{df2}{Dataframe containing the second cohort}
+\item{df2}{Dataframe containing the second cohort. Must have the same number of rows as df1.}
 
-\item{scale}{scale for fold change (default "log2")}
+\item{adjust}{Logical, whether to adjust p-values for multiple testing (default: FALSE).}
+
+\item{p_adjust}{Method for p-value adjustment if adjust = TRUE. Options: "BH" (default),
+"bonferroni", "holm", "hochberg", "hommel", "BY", "none".}
+
+\item{log_scale}{Logical, whether data is already log-transformed (default: TRUE).
+If TRUE: log2fc = mean(df2) - mean(df1) (difference of log values).
+If FALSE: foldchange = mean(df2) / mean(df1), log2fc = log2(foldchange).}
 }
 \value{
-A dataframe with the original data plus pvalue, padj, foldchange, nlog10p, and log2fc columns
+A dataframe containing the combined original data plus computed columns:
+  - pvalue: raw p-value from t-test
+  - adjusted_pvalue: adjusted p-value (if adjust = TRUE)
+  - log2fc: log2 fold change
+  - foldchange: fold change (if log_scale = FALSE)
 }
 \description{
-Performs a t-test on each row between two dataframes and calculates
-fold changes and adjusted p-values.
-}
-\details{
-Perform T-Test on Two Dataframes
+Takes two dataframes and performs a t-test on each row of the dataframes.
+Computes p-values, fold changes, and log2 fold changes with optional p-value adjustment.
 }
 \examples{
-# df1 <- data.frame(s1=rnorm(10), s2=rnorm(10), s3=rnorm(10))
-# df2 <- data.frame(s4=rnorm(10), s5=rnorm(10), s6=rnorm(10))
-# results <- performTTest(df1, df2, scale = "log2")
+# Basic t-test without adjustment
+result <- performTTest(control_data, treatment_data)
+
+# T-test with BH adjustment
+result <- performTTest(control_data, treatment_data, adjust = TRUE)
+
+# T-test on non-log data
+result <- performTTest(control_data, treatment_data, log_scale = FALSE)
 }

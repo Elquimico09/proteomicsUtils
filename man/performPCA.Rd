@@ -2,29 +2,38 @@
 % Please edit documentation in R/utilities.R
 \name{performPCA}
 \alias{performPCA}
-\title{Perform PCA}
+\title{Perform Principal Component Analysis (PCA)}
 \usage{
 performPCA(df, sample, scale = TRUE, center = TRUE)
 }
 \arguments{
-\item{df}{A dataframe containing numeric values}
+\item{df}{Dataframe containing numeric values. Rows are features (e.g., genes, proteins)
+and columns are samples.}
 
-\item{sample}{A vector of sample names}
+\item{sample}{A character vector containing the sample names/labels for each column in df.
+Must have the same length as the number of columns in df.}
 
-\item{scale}{Logical indicating whether to scale the data (default TRUE)}
+\item{scale}{Logical, whether to scale the data to unit variance (default: TRUE).}
 
-\item{center}{Logical indicating whether to center the data (default TRUE)}
+\item{center}{Logical, whether to center the data to zero mean (default: TRUE).}
 }
 \value{
-A list containing: PCA results dataframe, x-axis label, y-axis label
+A list containing three elements:
+  - [[1]]: dataframe with PCA coordinates (PC1, PC2, ...) and Sample column
+  - [[2]]: character string for x-axis label (PC1 with variance explained)
+  - [[3]]: character string for y-axis label (PC2 with variance explained)
 }
 \description{
-Performs PCA on a dataframe and returns results with variance explained.
-}
-\details{
-Perform Principal Component Analysis
+Given a numeric dataframe, performs PCA by transposing the dataframe (so that samples
+become rows and features become columns). Automatically filters out rows with zero
+variance and handles missing values by replacing them with zeros. Returns PCA results
+including transformed coordinates, variance explained, and axis labels.
 }
 \examples{
-# df <- data.frame(s1=rnorm(10), s2=rnorm(10), s3=rnorm(10))
-# pca_results <- performPCA(df, sample=c("A", "B", "C"))
+# Perform PCA on proteomics data
+sample_names <- c("Control_1", "Control_2", "Treatment_1", "Treatment_2")
+pca_results <- performPCA(protein_data, sample = sample_names)
+
+# PCA without scaling
+pca_results <- performPCA(protein_data, sample = sample_names, scale = FALSE)
 }

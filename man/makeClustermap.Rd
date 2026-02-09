@@ -2,43 +2,52 @@
 % Please edit documentation in R/utilities.R
 \name{makeClustermap}
 \alias{makeClustermap}
-\title{Create Clustermap}
+\title{Create a Clustered Heatmap}
 \usage{
 makeClustermap(
   df,
   scale = TRUE,
   show_rownames = FALSE,
   rownames = NULL,
+  p_cutoff = 0.05,
+  log2fc_cutoff = 1,
   col = circlize::colorRamp2(c(-2, 0, 2), c("green", "black", "red")),
   width = NULL,
   height = NULL
 )
 }
 \arguments{
-\item{df}{A dataframe containing numeric values}
+\item{df}{Dataframe containing numeric values. Should include pvalue and log2fc columns for filtering.
+If a "Gene" column is present, it will be used for row names.}
 
-\item{scale}{Logical indicating whether to scale the rows (default TRUE)}
+\item{scale}{Logical, whether to scale the data (default: TRUE).}
 
-\item{show_rownames}{Logical indicating whether to show row names (default FALSE)}
+\item{show_rownames}{Logical, whether to show the row names (default: FALSE).}
 
-\item{rownames}{Optional vector of row names to display}
+\item{rownames}{Vector, custom row names for the dataframe (default: NULL).}
 
-\item{col}{Color scale for the heatmap}
+\item{p_cutoff}{Numeric, p-value cutoff for filtering rows (default: 0.05).}
 
-\item{width}{Width of the heatmap}
+\item{log2fc_cutoff}{Numeric, absolute log2 fold change cutoff for filtering rows (default: 1).}
 
-\item{height}{Height of the heatmap}
+\item{col}{Color mapping for the heatmap. Default is green-black-red scale from -2 to 2.}
+
+\item{width}{Unit, the width of the heatmap (default: NULL for automatic).}
+
+\item{height}{Unit, the height of the heatmap (default: NULL for automatic).}
 }
 \value{
-A ComplexHeatmap object
+A ComplexHeatmap object containing the clustered heatmap.
 }
 \description{
-Creates a heatmap using ComplexHeatmap with optional row scaling.
-}
-\details{
-Create a Heatmap with Clustering
+Given a numeric dataframe, creates a clustered heatmap with optional filtering
+by p-value and log2 fold change. Automatically filters the data and generates
+a ComplexHeatmap object with hierarchical clustering.
 }
 \examples{
-# df <- data.frame(s1=rnorm(10), s2=rnorm(10), s3=rnorm(10))
-# hm <- makeClustermap(df)
+# Basic heatmap
+makeClustermap(results_df)
+
+# Heatmap with custom cutoffs
+makeClustermap(results_df, p_cutoff = 0.01, log2fc_cutoff = 2)
 }
