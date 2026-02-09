@@ -1,5 +1,3 @@
-
-
 # Function: performGO
 # Takes a list of dataframes and performs gene ontology on each dataframe and returns
 # a list of gene ontology results
