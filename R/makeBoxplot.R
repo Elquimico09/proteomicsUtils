@@ -1,6 +1,6 @@
-# Function: makeBarplot
+# Function: makeBoxplot
 # Takes a long dataframe for plotting and a wide ANOVA results dataframe
-# containing Tukey p-values from performANOVA.
+# containing Tukey p-values from performANOVA/perform2WayANOVA.
 #
 # Args:
 # @param df: dataframe containing the data
@@ -9,31 +9,26 @@
 # @param gene: gene name to plot
 #
 # Returns:
-# @return: ggplot2 object containing the barplot
-#' Create Barplot with Significant ANOVA Comparisons
-#' @title Make Barplot
+# @return: ggplot2 object containing the boxplot
+#' Create Boxplot with Significant ANOVA Comparisons
+#' @title Make Boxplot
 #' @description
-#' Creates a barplot for a specific gene and adds significance brackets only for
-#' significant Tukey HSD pairwise comparisons from `performANOVA()` output.
+#' Creates a boxplot for a specific gene and adds significance brackets only for
+#' significant Tukey HSD pairwise comparisons from `performANOVA()` or
+#' `perform2WayANOVA()` output.
 #' @param df A long-format dataframe with at least `Treatment` and `Abundance`
 #'   columns. If a `Gene` column is present, rows are filtered by `gene`.
-#' @param pvalue_df Output dataframe from `performANOVA()` containing
-#'   `tukey_pvalue_<group1>_<group2>` columns.
+#' @param pvalue_df Output dataframe from `performANOVA()` or
+#'   `perform2WayANOVA()` containing `tukey_pvalue_<group1>_<group2>` columns.
 #' @param cohort_labels A character vector of cohort labels in plotting order.
 #' @param gene The gene name to plot.
 #' @param tip_length Numeric tip length for significance brackets (default 0.04).
 #' @param label_size Numeric label size for significance annotations (default 5).
-#' @return A ggplot2 object containing the barplot.
+#' @return A ggplot2 object containing the boxplot.
 #' @export
 #' @examples
-#' # anova_res <- performANOVA(control, treated, placebo)
-#' # gene_long <- data.frame(
-#' #   Treatment = rep(c("control", "treated", "placebo"), each = 4),
-#' #   Abundance = rnorm(12),
-#' #   Gene = "ACTB"
-#' # )
-#' # p <- makeBarplot(gene_long, anova_res, c("control", "treated", "placebo"), "ACTB", tip_length = 0.03, label_size = 4.5)
-makeBarplot <- function(df, pvalue_df, cohort_labels, gene, tip_length = 0.04, label_size = 5) {
+#' # p <- makeBoxplot(gene_long, anova_res, c("control", "treated", "placebo"), "ACTB", tip_length = 0.03, label_size = 4.5)
+makeBoxplot <- function(df, pvalue_df, cohort_labels, gene, tip_length = 0.04, label_size = 5) {
   if (!all(c("Treatment", "Abundance") %in% names(df))) {
     stop("`df` must contain `Treatment` and `Abundance` columns.")
   }
@@ -53,7 +48,6 @@ makeBarplot <- function(df, pvalue_df, cohort_labels, gene, tip_length = 0.04, l
 
   df$Treatment <- factor(df$Treatment, levels = cohort_labels)
 
-  # Identify the matching ANOVA result row
   if ("Gene" %in% names(pvalue_df)) {
     p_rows <- pvalue_df[pvalue_df$Gene == gene, , drop = FALSE]
   } else if (!is.null(rownames(pvalue_df))) {
@@ -66,7 +60,6 @@ makeBarplot <- function(df, pvalue_df, cohort_labels, gene, tip_length = 0.04, l
     stop("Requested gene was not found in `pvalue_df`.")
   }
 
-  # If duplicates exist, use first match for plotting annotations
   p_row <- p_rows[1, , drop = FALSE]
 
   p_to_signif <- function(p) {
@@ -77,7 +70,6 @@ makeBarplot <- function(df, pvalue_df, cohort_labels, gene, tip_length = 0.04, l
     ""
   }
 
-  # Build significance table for all pairwise cohort combinations
   pair_mat <- utils::combn(cohort_labels, 2)
   sig_rows <- list()
 
@@ -132,20 +124,12 @@ makeBarplot <- function(df, pvalue_df, cohort_labels, gene, tip_length = 0.04, l
   ymin <- min_y - (0.05 * y_range)
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Treatment, y = Abundance)) +
-    ggplot2::geom_bar(
+    ggplot2::geom_boxplot(
       ggplot2::aes(fill = Treatment),
-      stat = "summary",
-      fun = "mean",
-      position = "dodge",
       width = 0.6,
       alpha = 0.6,
-      color = "black"
-    ) +
-    ggplot2::geom_errorbar(
-      stat = "summary",
-      fun.data = "mean_se",
-      position = ggplot2::position_dodge(width = 0.6),
-      width = 0.2
+      color = "black",
+      outlier.shape = NA
     ) +
     ggplot2::geom_jitter(
       ggplot2::aes(fill = Treatment),
@@ -153,7 +137,7 @@ makeBarplot <- function(df, pvalue_df, cohort_labels, gene, tip_length = 0.04, l
       color = "black",
       size = 1.5,
       width = 0.2,
-      alpha = 0.7
+      alpha = 0.75
     ) +
     ggprism::theme_prism(base_size = 8) +
     ggplot2::labs(title = gene, x = NULL, y = "Log2Abundance") +
