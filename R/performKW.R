@@ -48,20 +48,12 @@ performKW <- function(..., comparisons = "all", p_adjust = "BH", log_scale = TRU
          "Please install it with: install.packages('dunn.test')")
   }
 
-  # Capture the call to extract variable names
-  args <- as.list(match.call(expand.dots = TRUE))[-1]
-  # Remove named arguments from args
-  args$comparisons <- NULL
-  args$p_adjust <- NULL
-  args$log_scale <- NULL
-  arg_names <- as.character(args)
+  # Capture expressions passed through ... to extract group names
+  dot_args <- as.list(substitute(list(...)))[-1]
+  arg_names <- vapply(dot_args, deparse1, character(1))
 
   # Get the actual data frames
   df_list <- list(...)
-  # Remove named arguments from df_list if they got included
-  if (!is.null(names(df_list))) {
-    df_list <- df_list[!names(df_list) %in% c("comparisons", "p_adjust")]
-  }
 
   n_groups <- length(df_list)
   if (n_groups < 3) stop("Need at least 3 groups for Kruskal-Wallis")
