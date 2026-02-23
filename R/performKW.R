@@ -16,11 +16,17 @@
 #'     Group names must match the variable names passed in.
 #' @param p_adjust Method for p-value adjustment in Dunn's test. Default is "BH" (Benjamini-Hochberg).
 #'   Other options: "bonferroni", "holm", "hochberg", "hommel", "BY", "none".
+#' @param log_scale Logical; whether input data are already on a log scale.
+#'   - TRUE (default): fold change is computed as mean(group2) - mean(group1)
+#'   - FALSE: fold change is computed as mean(group2) / mean(group1), and log2fc
+#'     is computed as log2(fold change)
 #'
 #' @return A data frame with the combined original data plus computed columns:
 #'   - kw_pvalue: overall Kruskal-Wallis p-value for each row
 #'   - dunn_pvalue_X_Y: Dunn's test adjusted p-values for each pairwise comparison
-#'   - foldchange_X_Y: fold changes (mean difference) for each pairwise comparison
+#'   - foldchange_X_Y: fold changes for each pairwise comparison (difference if
+#'     `log_scale = TRUE`, ratio if `log_scale = FALSE`)
+#'   - log2fc_X_Y: log2 fold changes for each pairwise comparison
 #'
 #' @export
 #'
@@ -32,7 +38,7 @@
 #' result <- performKW(control, treated, placebo,
 #'                     comparisons = list(c("control", "treated"),
 #'                                        c("control", "placebo")))
-performKW <- function(..., comparisons = "all", p_adjust = "BH") {
+performKW <- function(..., comparisons = "all", p_adjust = "BH", log_scale = TRUE) {
   require(dplyr)
   require(stats)
 
@@ -47,6 +53,7 @@ performKW <- function(..., comparisons = "all", p_adjust = "BH") {
   # Remove named arguments from args
   args$comparisons <- NULL
   args$p_adjust <- NULL
+  args$log_scale <- NULL
   arg_names <- as.character(args)
 
   # Get the actual data frames
@@ -99,6 +106,7 @@ performKW <- function(..., comparisons = "all", p_adjust = "BH") {
   pvalues <- numeric(n_rows)
   dunn_pvalues <- matrix(1, nrow = n_rows, ncol = all_n_pairs)
   foldchanges <- matrix(0, nrow = n_rows, ncol = all_n_pairs)
+  log2fcs <- matrix(0, nrow = n_rows, ncol = all_n_pairs)
 
   # Loop over each row
   for (i in seq_len(n_rows)) {
@@ -148,9 +156,23 @@ performKW <- function(..., comparisons = "all", p_adjust = "BH") {
               dunn_pvalues[i, j] <- dunn_result$P.adjusted[idx[1]]
             }
 
-            # Calculate fold change
-            foldchanges[i, j] <- mean(values_list[[g2]], na.rm = TRUE) -
-                                 mean(values_list[[g1]], na.rm = TRUE)
+            mean_g1 <- mean(values_list[[g1]], na.rm = TRUE)
+            mean_g2 <- mean(values_list[[g2]], na.rm = TRUE)
+
+            if (isTRUE(log_scale)) {
+              foldchanges[i, j] <- mean_g2 - mean_g1
+              log2fcs[i, j] <- foldchanges[i, j]
+            } else {
+              if (is.na(mean_g1) || mean_g1 == 0) {
+                foldchanges[i, j] <- NA_real_
+                log2fcs[i, j] <- NA_real_
+              } else {
+                foldchanges[i, j] <- mean_g2 / mean_g1
+                log2fcs[i, j] <- ifelse(foldchanges[i, j] > 0,
+                                        log2(foldchanges[i, j]),
+                                        NA_real_)
+              }
+            }
           }
         }
       } else {
@@ -169,6 +191,7 @@ performKW <- function(..., comparisons = "all", p_adjust = "BH") {
   for (j in output_pair_indices) {
     c_df[[paste0("dunn_pvalue_", all_pair_names[j])]] <- dunn_pvalues[, j]
     c_df[[paste0("foldchange_", all_pair_names[j])]] <- foldchanges[, j]
+    c_df[[paste0("log2fc_", all_pair_names[j])]] <- log2fcs[, j]
   }
 
   return(c_df)

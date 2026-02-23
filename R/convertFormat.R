@@ -1,9 +1,10 @@
 #' convertFormat
 #' @description
 #' Converts ANOVA or Kruskal-Wallis results to the format expected by makeVolcano. Extracts
-#' the p-value and fold change for a specific comparison and renames them to pvalue, nlog10p,
-#' and log2fc. Automatically detects whether input is from performANOVA (tukey_pvalue) or
-#' performKW (dunn_pvalue).
+#' the p-value and log2 fold change for a specific comparison and renames them to pvalue,
+#' nlog10p, and log2fc. Automatically detects whether input is from performANOVA
+#' (tukey_pvalue) or performKW (dunn_pvalue). Prefers `log2fc_*` columns when available
+#' and falls back to deriving from `foldchange_*` for backward compatibility.
 #'
 #' @param results Data frame output from performANOVA or performKW
 #' @param comparison Character vector of length 2 specifying the comparison,
@@ -12,7 +13,7 @@
 #' @return A data frame with added columns:
 #'   - pvalue: the Tukey/Dunn p-value for the specified comparison
 #'   - nlog10p: -log10 transformed p-value
-#'   - log2fc: the fold change for the specified comparison
+#'   - log2fc: log2 fold change for the specified comparison
 #' @export
 #'
 #' @examples
@@ -39,26 +40,33 @@ convertFormat <- function(results, comparison) {
   tukey_col2 <- paste0("tukey_pvalue_", pair_name2)
   dunn_col1 <- paste0("dunn_pvalue_", pair_name1)
   dunn_col2 <- paste0("dunn_pvalue_", pair_name2)
+  log2fc_col1 <- paste0("log2fc_", pair_name1)
+  log2fc_col2 <- paste0("log2fc_", pair_name2)
   fc_col1 <- paste0("foldchange_", pair_name1)
   fc_col2 <- paste0("foldchange_", pair_name2)
 
   # Find which column exists
   pvalue_col <- NULL
+  log2fc_col <- NULL
   fc_col <- NULL
   flip_sign <- FALSE
 
   if (tukey_col1 %in% names(results)) {
     pvalue_col <- tukey_col1
+    log2fc_col <- log2fc_col1
     fc_col <- fc_col1
   } else if (tukey_col2 %in% names(results)) {
     pvalue_col <- tukey_col2
+    log2fc_col <- log2fc_col2
     fc_col <- fc_col2
     flip_sign <- TRUE
   } else if (dunn_col1 %in% names(results)) {
     pvalue_col <- dunn_col1
+    log2fc_col <- log2fc_col1
     fc_col <- fc_col1
   } else if (dunn_col2 %in% names(results)) {
     pvalue_col <- dunn_col2
+    log2fc_col <- log2fc_col2
     fc_col <- fc_col2
     flip_sign <- TRUE
   } else {
@@ -72,7 +80,15 @@ convertFormat <- function(results, comparison) {
   # Create output with renamed columns
   result <- results
   result$pvalue <- result[[pvalue_col]]
-  result$log2fc <- if (flip_sign) -result[[fc_col]] else result[[fc_col]]
+  if (log2fc_col %in% names(results)) {
+    result$log2fc <- if (flip_sign) -result[[log2fc_col]] else result[[log2fc_col]]
+  } else if (fc_col %in% names(results)) {
+    # Backward-compatible fallback for older outputs without explicit log2fc columns.
+    result$log2fc <- if (flip_sign) -result[[fc_col]] else result[[fc_col]]
+  } else {
+    stop(paste0("Could not find log2fc/foldchange column for comparison '",
+                comparison[1], "' vs '", comparison[2], "'."))
+  }
   result$nlog10p <- -log10(result$pvalue)
 
   return(result)

@@ -29,18 +29,27 @@ makeClustermap <- function(df, scale = TRUE, show_rownames = FALSE, rownames = N
                            p_cutoff = 0.05, log2fc_cutoff = 1,
                            col = circlize::colorRamp2(c(-2, 0, 2), c("green", "black", "red")),
                            width = NULL, height = NULL) {
+  required_cols <- c("pvalue", "log2fc")
+  missing_cols <- setdiff(required_cols, colnames(df))
+  if (length(missing_cols) > 0) {
+    stop(paste0("Input df is missing required column(s): ",
+                paste(missing_cols, collapse = ", "),
+                ". Run convertFormat() first."))
+  }
+
   # if the df has a gene column, set it as the rownames
   df <- df %>%
-    filter(pvalue < p_cutoff & abs(log2fc) >= log2fc_cutoff)
+    dplyr::filter(pvalue < p_cutoff & abs(log2fc) >= log2fc_cutoff)
   if ("Gene" %in% colnames(df)) {
     rownames <- df$Gene
   }
-  
-  df <- df %>% dplyr::select(where(is.numeric))  %>%
-    select(-c(log2fc, pvalue, padj, foldchange, nlog10p))
+
+  df <- df %>%
+    dplyr::select(where(is.numeric)) %>%
+    dplyr::select(-dplyr::any_of(c("log2fc", "pvalue", "foldchange", "nlog10p")))
   require(ComplexHeatmap)
   colnames <- colnames(df)
-  if (is.null(rownames)) {
+  if (!is.null(rownames)) {
     rownames(df) <- rownames
   }
   if (scale) {
