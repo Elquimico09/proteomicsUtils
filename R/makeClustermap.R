@@ -46,10 +46,10 @@ makeClustermap <- function(df, scale = TRUE, show_rownames = FALSE, rownames = N
 
   df <- df %>%
     dplyr::select(where(is.numeric)) %>%
-    dplyr::select(-dplyr::any_of(c("log2fc", "pvalue", "foldchange", "nlog10p")))
-    dplyr::select(!contains("foldchange")) %>%
-    dplyr::select(!contains("pvalue")) %>%
-    dplyr::select(!contains("nlog10p"))
+    dplyr::select(-dplyr::any_of(c("log2fc", "pvalue", "foldchange", "nlog10p"))) %>%
+    dplyr::select(!tidyselect::contains("foldchange")) %>%
+    dplyr::select(!tidyselect::contains("pvalue")) %>%
+    dplyr::select(!tidyselect::contains("nlog10p"))
   require(ComplexHeatmap)
   colnames <- colnames(df)
   if (!is.null(rownames)) {
