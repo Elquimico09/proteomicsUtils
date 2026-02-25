@@ -28,7 +28,7 @@
 #' # Heatmap with custom cutoffs
 #' makeClustermap(results_df, p_cutoff = 0.01, log2fc_cutoff = 2)
 makeClustermap <- function(df, scale = TRUE, show_rownames = FALSE, rownames = NULL,
-                           p_cutoff = 0.05, log2fc_cutoff = 1,
+                           p_cutoff = NULL, log2fc_cutoff = NULL,
                            col = circlize::colorRamp2(c(-2, 0, 2), c("green", "black", "red")),
                            width = NULL, height = NULL) {
   required_cols <- c(
@@ -80,8 +80,7 @@ makeClustermap <- function(df, scale = TRUE, show_rownames = FALSE, rownames = N
                                   show_row_names = TRUE, row_labels = rownames,
                                   column_names_gp = gpar(fontsize = 10, fontface = "bold"),
                                   row_names_gp = gpar(fontsize = 10, fontface = "bold"),
-                                  width = width, height = height,
-                                  rect_gp = gpar(col = "black"), border_gp = gpar(col = "black"),
+                                  width = width, height = height,, border_gp = gpar(col = "black"),
                                   heatmap_legend_param = list(
                                     title = "Z-Score", at = c(-2, 0, 2),
                                     labels = c("-2", "0", "2"),
@@ -94,7 +93,7 @@ makeClustermap <- function(df, scale = TRUE, show_rownames = FALSE, rownames = N
     hm <- ComplexHeatmap::Heatmap(df, cluster_columns = FALSE, col = col,
                                   show_row_names = FALSE,
                                   column_names_gp = gpar(fontsize = 12),
-                                  width = width, height = height, border_gp = gpar(col = "black"),
+                                  width = width, height = height, border_gp = gpar(col = "black", lwd = 2),
                                   heatmap_legend_param = list(
                                     title = "Z-Score", at = c(-2, 0, 2),
                                     labels = c("-2", "0", "2"),
