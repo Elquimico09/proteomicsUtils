@@ -10,7 +10,9 @@
 #' @param show_rownames Logical, whether to show the row names (default: FALSE).
 #' @param rownames Vector, custom row names for the dataframe (default: NULL).
 #' @param p_cutoff Numeric, p-value cutoff for filtering rows (default: 0.05).
+#'   Set to NULL to disable p-value filtering.
 #' @param log2fc_cutoff Numeric, absolute log2 fold change cutoff for filtering rows (default: 1).
+#'   Set to NULL to disable log2 fold change filtering.
 #' @param col Color mapping for the heatmap. Default is green-black-red scale from -2 to 2.
 #' @param width Unit, the width of the heatmap (default: NULL for automatic).
 #' @param height Unit, the height of the heatmap (default: NULL for automatic).
@@ -29,7 +31,10 @@ makeClustermap <- function(df, scale = TRUE, show_rownames = FALSE, rownames = N
                            p_cutoff = 0.05, log2fc_cutoff = 1,
                            col = circlize::colorRamp2(c(-2, 0, 2), c("green", "black", "red")),
                            width = NULL, height = NULL) {
-  required_cols <- c("pvalue", "log2fc")
+  required_cols <- c(
+    if (!is.null(p_cutoff)) "pvalue",
+    if (!is.null(log2fc_cutoff)) "log2fc"
+  )
   missing_cols <- setdiff(required_cols, colnames(df))
   if (length(missing_cols) > 0) {
     stop(paste0("Input df is missing required column(s): ",
@@ -37,9 +42,19 @@ makeClustermap <- function(df, scale = TRUE, show_rownames = FALSE, rownames = N
                 ". Run convertFormat() first."))
   }
 
+  # Apply only the requested filters.
+  if (!is.null(p_cutoff) && !is.null(log2fc_cutoff)) {
+    df <- df %>%
+      dplyr::filter(pvalue < p_cutoff & abs(log2fc) >= log2fc_cutoff)
+  } else if (!is.null(p_cutoff)) {
+    df <- df %>%
+      dplyr::filter(pvalue < p_cutoff)
+  } else if (!is.null(log2fc_cutoff)) {
+    df <- df %>%
+      dplyr::filter(abs(log2fc) >= log2fc_cutoff)
+  }
+
   # if the df has a gene column, set it as the rownames
-  df <- df %>%
-    dplyr::filter(pvalue < p_cutoff & abs(log2fc) >= log2fc_cutoff)
   if ("Gene" %in% colnames(df)) {
     rownames <- df$Gene
   }
