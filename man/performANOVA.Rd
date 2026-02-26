@@ -22,12 +22,11 @@ All data frames must have the same number of rows.}
   is computed as log2(fold change)}
 }
 \value{
-A data frame with the combined original data plus computed columns:
-  - anova_pvalue: overall ANOVA p-value for each row
-  - tukey_pvalue_X_Y: Tukey's HSD adjusted p-values for each pairwise comparison
-  - foldchange_X_Y: fold changes for each pairwise comparison (difference if
-    `log_scale = TRUE`, ratio if `log_scale = FALSE`)
-  - log2fc_X_Y: log2 fold changes for each pairwise comparison
+A named list with:
+  - data: A data frame with the combined original data plus computed columns:
+    anova_pvalue, tukey_pvalue_X_Y, foldchange_X_Y, and log2fc_X_Y.
+  - cohort_columns: A named list where each element corresponds to a cohort
+    and contains the original column names for that cohort.
 }
 \description{
 Takes data frames as arguments, each belonging to a cohort, and performs an ANOVA on each row.
@@ -38,6 +37,8 @@ pairwise comparison. Column names are automatically derived from the variable na
 \examples{
 # For 3 groups (all pairwise comparisons)
 result <- performANOVA(control, treated, placebo)
+result$data
+result$cohort_columns
 
 # Only specific comparisons
 result <- performANOVA(control, treated, placebo,

@@ -17,18 +17,19 @@
 #'   - FALSE: fold change is computed as mean(group2) / mean(group1), and log2fc
 #'     is computed as log2(fold change)
 #'
-#' @return A data frame with the combined original data plus computed columns:
-#'   - anova_pvalue: overall ANOVA p-value for each row
-#'   - tukey_pvalue_X_Y: Tukey's HSD adjusted p-values for each pairwise comparison
-#'   - foldchange_X_Y: fold changes for each pairwise comparison (difference if
-#'     `log_scale = TRUE`, ratio if `log_scale = FALSE`)
-#'   - log2fc_X_Y: log2 fold changes for each pairwise comparison
+#' @return A named list with:
+#'   - data: A data frame with the combined original data plus computed columns:
+#'     anova_pvalue, tukey_pvalue_X_Y, foldchange_X_Y, and log2fc_X_Y.
+#'   - cohort_columns: A named list where each element corresponds to a cohort
+#'     and contains the original column names for that cohort.
 #'
 #' @export
 #'
 #' @examples
 #' # For 3 groups (all pairwise comparisons)
 #' result <- performANOVA(control, treated, placebo)
+#' result$data
+#' result$cohort_columns
 #'
 #' # Only specific comparisons
 #' result <- performANOVA(control, treated, placebo,
@@ -50,6 +51,12 @@ performANOVA <- function(..., comparisons = "all", log_scale = TRUE) {
 
   # Use variable names as group names
   group_names <- arg_names
+
+  # Track original column names for each cohort
+  cohort_columns <- stats::setNames(
+    lapply(df_list, colnames),
+    group_names
+  )
 
   # Number of rows (assuming all data frames have the same number of rows)
   n_rows <- nrow(df_list[[1]])
@@ -162,5 +169,8 @@ performANOVA <- function(..., comparisons = "all", log_scale = TRUE) {
     c_df[[paste0("log2fc_", all_pair_names[j])]] <- log2fcs[, j]
   }
 
-  return(c_df)
+  return(list(
+    data = c_df,
+    cohort_columns = cohort_columns
+  ))
 }

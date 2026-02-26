@@ -7,7 +7,8 @@
 convertFormat(results, comparison)
 }
 \arguments{
-\item{results}{Data frame output from performANOVA or performKW}
+\item{results}{Data frame output from performANOVA/performKW (legacy) or
+list output containing `data` and `cohort_columns` (current).}
 
 \item{comparison}{Character vector of length 2 specifying the comparison,
 e.g., c("control", "treated"). Order doesn't matter.}

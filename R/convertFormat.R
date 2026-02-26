@@ -6,7 +6,8 @@
 #' (tukey_pvalue) or performKW (dunn_pvalue). Prefers `log2fc_*` columns when available
 #' and falls back to deriving from `foldchange_*` for backward compatibility.
 #'
-#' @param results Data frame output from performANOVA or performKW
+#' @param results Data frame output from performANOVA/performKW (legacy) or
+#'   list output containing `data` and `cohort_columns` (current).
 #' @param comparison Character vector of length 2 specifying the comparison,
 #'   e.g., c("control", "treated"). Order doesn't matter.
 #'
@@ -27,6 +28,13 @@
 #' volcano_data <- convertFormat(kw_res, c("control", "treated"))
 #' makeVolcano(volcano_data)
 convertFormat <- function(results, comparison) {
+  # Backward/forward compatibility:
+  # - legacy: results is a data frame
+  # - current: results is list(data=..., cohort_columns=...)
+  if (is.list(results) && !is.data.frame(results) && "data" %in% names(results)) {
+    results <- results$data
+  }
+
   if (length(comparison) != 2) {
     stop("comparison must be a character vector of length 2")
   }

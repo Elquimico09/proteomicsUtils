@@ -25,17 +25,16 @@ Other options: "bonferroni", "holm", "hochberg", "hommel", "BY", "none".}
   is computed as log2(fold change)}
 }
 \value{
-A data frame with the combined original data plus computed columns:
-  - kw_pvalue: overall Kruskal-Wallis p-value for each row
-  - dunn_pvalue_X_Y: Dunn's test adjusted p-values for each pairwise comparison
-  - foldchange_X_Y: fold changes for each pairwise comparison (difference if
-    `log_scale = TRUE`, ratio if `log_scale = FALSE`)
-  - log2fc_X_Y: log2 fold changes for each pairwise comparison
+A named list with:
+  - data: A data frame with the combined original data plus computed columns:
+    kw_pvalue, dunn_pvalue_X_Y, foldchange_X_Y, and log2fc_X_Y.
+  - cohort_columns: A named list where each element corresponds to a cohort
+    and contains the original column names for that cohort.
 }
 \description{
 Takes data frames as arguments, each belonging to a cohort, and performs a non-parametric
 Kruskal-Wallis test on each row. This is the non-parametric alternative to ANOVA for comparing
-three or more groups. Works dynamically with 3 or more groups. The function returns a data frame
+three or more groups. Works dynamically with 3 or more groups. The function returns results
 with the p-value from the Kruskal-Wallis test, Dunn's test p-values for pairwise comparisons,
 and fold changes for each pairwise comparison. Column names are automatically derived from
 the variable names passed in.
@@ -43,6 +42,8 @@ the variable names passed in.
 \examples{
 # For 3 groups (all pairwise comparisons)
 result <- performKW(control, treated, placebo)
+result$data
+result$cohort_columns
 
 # Only specific comparisons
 result <- performKW(control, treated, placebo,

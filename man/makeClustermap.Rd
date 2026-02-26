@@ -9,8 +9,8 @@ makeClustermap(
   scale = TRUE,
   show_rownames = FALSE,
   rownames = NULL,
-  p_cutoff = 0.05,
-  log2fc_cutoff = 1,
+  p_cutoff = NULL,
+  log2fc_cutoff = NULL,
   col = circlize::colorRamp2(c(-2, 0, 2), c("green", "black", "red")),
   width = NULL,
   height = NULL
@@ -26,9 +26,11 @@ If a "Gene" column is present, it will be used for row names.}
 
 \item{rownames}{Vector, custom row names for the dataframe (default: NULL).}
 
-\item{p_cutoff}{Numeric, p-value cutoff for filtering rows (default: 0.05).}
+\item{p_cutoff}{Numeric, p-value cutoff for filtering rows (default: 0.05).
+Set to NULL to disable p-value filtering.}
 
-\item{log2fc_cutoff}{Numeric, absolute log2 fold change cutoff for filtering rows (default: 1).}
+\item{log2fc_cutoff}{Numeric, absolute log2 fold change cutoff for filtering rows (default: 1).
+Set to NULL to disable log2 fold change filtering.}
 
 \item{col}{Color mapping for the heatmap. Default is green-black-red scale from -2 to 2.}
 

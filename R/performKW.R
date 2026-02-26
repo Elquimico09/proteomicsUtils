@@ -2,7 +2,7 @@
 #'
 #' Takes data frames as arguments, each belonging to a cohort, and performs a non-parametric
 #' Kruskal-Wallis test on each row. This is the non-parametric alternative to ANOVA for comparing
-#' three or more groups. Works dynamically with 3 or more groups. The function returns a data frame
+#' three or more groups. Works dynamically with 3 or more groups. The function returns results
 #' with the p-value from the Kruskal-Wallis test, Dunn's test p-values for pairwise comparisons,
 #' and fold changes for each pairwise comparison. Column names are automatically derived from
 #' the variable names passed in.
@@ -21,18 +21,19 @@
 #'   - FALSE: fold change is computed as mean(group2) / mean(group1), and log2fc
 #'     is computed as log2(fold change)
 #'
-#' @return A data frame with the combined original data plus computed columns:
-#'   - kw_pvalue: overall Kruskal-Wallis p-value for each row
-#'   - dunn_pvalue_X_Y: Dunn's test adjusted p-values for each pairwise comparison
-#'   - foldchange_X_Y: fold changes for each pairwise comparison (difference if
-#'     `log_scale = TRUE`, ratio if `log_scale = FALSE`)
-#'   - log2fc_X_Y: log2 fold changes for each pairwise comparison
+#' @return A named list with:
+#'   - data: A data frame with the combined original data plus computed columns:
+#'     kw_pvalue, dunn_pvalue_X_Y, foldchange_X_Y, and log2fc_X_Y.
+#'   - cohort_columns: A named list where each element corresponds to a cohort
+#'     and contains the original column names for that cohort.
 #'
 #' @export
 #'
 #' @examples
 #' # For 3 groups (all pairwise comparisons)
 #' result <- performKW(control, treated, placebo)
+#' result$data
+#' result$cohort_columns
 #'
 #' # Only specific comparisons
 #' result <- performKW(control, treated, placebo,
@@ -60,6 +61,12 @@ performKW <- function(..., comparisons = "all", p_adjust = "BH", log_scale = TRU
 
   # Use variable names as group names
   group_names <- arg_names
+
+  # Track original column names for each cohort
+  cohort_columns <- stats::setNames(
+    lapply(df_list, colnames),
+    group_names
+  )
 
   # Number of rows (assuming all data frames have the same number of rows)
   n_rows <- nrow(df_list[[1]])
@@ -186,5 +193,8 @@ performKW <- function(..., comparisons = "all", p_adjust = "BH", log_scale = TRU
     c_df[[paste0("log2fc_", all_pair_names[j])]] <- log2fcs[, j]
   }
 
-  return(c_df)
+  return(list(
+    data = c_df,
+    cohort_columns = cohort_columns
+  ))
 }
